@@ -31,7 +31,35 @@ function mostrar(tela) {
   $("#telaApp").hidden = tela !== "app";
   $("#navlinks").hidden = tela !== "app";
   $("#quemSou").hidden = tela !== "app";
+  $("#btnMenu").hidden = tela !== "app";
+  fecharMenu();
 }
+
+/* ---------------- menu no celular ---------------- */
+const nav = document.querySelector("nav.top");
+function fecharMenu() {
+  nav.classList.remove("aberto");
+  $("#btnMenu").setAttribute("aria-expanded", "false");
+  $("#btnMenu .btn-menu-txt").textContent = "Menu";
+}
+$("#btnMenu").addEventListener("click", () => {
+  const abrir = !nav.classList.contains("aberto");
+  nav.classList.toggle("aberto", abrir);
+  $("#btnMenu").setAttribute("aria-expanded", String(abrir));
+  $("#btnMenu .btn-menu-txt").textContent = abrir ? "Fechar" : "Menu";
+});
+$("#navlinks").addEventListener("click", (e) => { if (e.target.closest("a")) fecharMenu(); });
+document.addEventListener("click", (e) => { if (nav.classList.contains("aberto") && !nav.contains(e.target)) fecharMenu(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharMenu(); });
+
+// Destaca no menu a seção que está na tela.
+const espiao = "IntersectionObserver" in window ? new IntersectionObserver((itens) => {
+  itens.forEach(i => {
+    if (!i.isIntersecting) return;
+    document.querySelectorAll("#navlinks a").forEach(a => a.toggleAttribute("aria-current", a.getAttribute("href") === "#" + i.target.id));
+  });
+}, { rootMargin: "-45% 0px -50% 0px" }) : null;
+document.querySelectorAll("#telaApp section[id]").forEach(s => espiao?.observe(s));
 
 /* ---------------- entrada ---------------- */
 $("#formLogin").addEventListener("submit", async (e) => {
@@ -43,6 +71,7 @@ $("#formLogin").addEventListener("submit", async (e) => {
   finally { $("#btnEntrar").disabled = false; }
 });
 $("#btnSair").addEventListener("click", () => signOut(auth));
+$("#btnSairMenu").addEventListener("click", () => signOut(auth));
 
 $("#formSenha").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -87,6 +116,7 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
     $("#nomeTopo").textContent = m.nome;
+    $("#nomeMenu").textContent = m.nome;
     $("#saudacao").textContent = `Que bom te ver por aqui, ${m.nome}.`;
     $("#linkPainel").hidden = !admin;
     $("#modalSenha").hidden = !m.trocarSenha;
