@@ -246,5 +246,12 @@ td .acoes{display:flex;gap:6px;flex-wrap:wrap}
 footer{border-top:1px solid var(--line);margin-top:80px}
 footer .wrap{padding-block:28px 40px;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between;align-items:center}
 .theme-btn{border:1px solid var(--line);background:transparent;padding:5px 10px;font-family:var(--f-type);font-size:12px;cursor:pointer;border-radius:2px}
+img.capa-db{background:var(--paper-2)}
+.mini-capa{width:44px;aspect-ratio:2/3;object-fit:cover;display:block}
+.capa-envio{display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:start}
+.capa-previa{width:96px;aspect-ratio:2/3;border:1.5px dashed var(--line);display:grid;place-items:center;text-align:center;overflow:hidden;background:var(--paper)}
+.capa-previa img{width:100%;height:100%;object-fit:cover;display:block}
+.visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.visually-hidden:focus-visible + label{outline:2px solid var(--rose-ink);outline-offset:3px}
 .carregando{padding:80px 0;text-align:center;font-family:var(--f-type);color:var(--ink-soft)}
 @media (max-width:560px){#nomeTopo{display:none}nav.top .wrap{gap:12px}}

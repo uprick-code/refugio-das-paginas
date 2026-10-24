@@ -1,7 +1,7 @@
 // Painel da Taís: leitoras, encontros, votação e acervo.
 import {
   auth, db, firebaseConfig, onAuthStateChanged, signOut, esc, emailDe, usuarioDoEmail, isAdminEmail,
-  normalizaUsuario, dataCurta, hojeISO, capaHTML, ligarTema, ADMINS
+  normalizaUsuario, dataCurta, hojeISO, capaHTML, ligarTema, ADMINS, prepararCapa, guardarCapaNoCache
 } from "./firebase.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { initializeAuth, inMemoryPersistence, createUserWithEmailAndPassword, signOut as sairDe }
@@ -334,22 +334,57 @@ async function revelar(v, vencedor, contagem) {
 
 /* ---------------- acervo ---------------- */
 const CAMPOS = { titulo: "#bTitulo", autor: "#bAutor", meta: "#bMeta", chamada: "#bChamada", sinopse: "#bSinopse", capa: "#bCapa", compra: "#bCompra", aviso: "#bAviso" };
+S.capaNova = null; S.tirarCapa = false;
+function mostrarPrevia(html) {
+  $("#capaPrevia").innerHTML = html || `<span class="small">sem capa</span>`;
+  $("#btnTirarCapa").hidden = !S.capaNova && !(S.editLivro && livroPorId(S.editLivro)?.capaDb && !S.tirarCapa);
+}
 function limparLivro() {
-  S.editLivro = null; $("#formLivro").reset();
+  S.editLivro = null; S.capaNova = null; S.tirarCapa = false; $("#formLivro").reset();
   $("#tituloLivro").textContent = "Novo livro"; $("#btnCancelarLivro").hidden = true;
+  $("#capaErro").textContent = ""; mostrarPrevia("");
 }
 $("#btnCancelarLivro").addEventListener("click", limparLivro);
+$("#bArquivo").addEventListener("change", async (e) => {
+  const arq = e.target.files[0]; if (!arq) return;
+  $("#capaErro").textContent = "";
+  try {
+    S.capaNova = await prepararCapa(arq); S.tirarCapa = false;
+    mostrarPrevia(`<img src="${S.capaNova}" alt="Prévia da capa">`);
+  } catch (err) { $("#capaErro").textContent = err.message; }
+  e.target.value = "";
+});
+$("#btnTirarCapa").addEventListener("click", () => {
+  S.capaNova = null;
+  if (S.editLivro && livroPorId(S.editLivro)?.capaDb) S.tirarCapa = true;
+  const link = $("#bCapa").value.trim();
+  mostrarPrevia(link ? `<img src="${esc(link)}" alt="">` : "");
+});
 $("#formLivro").addEventListener("submit", async (e) => {
   e.preventDefault();
   const dados = Object.fromEntries(Object.entries(CAMPOS).map(([k, sel]) => [k, $(sel).value.trim()]));
   dados.brasil = $("#bBrasil").checked; dados.escritora = $("#bEscritora").checked;
   for (const k of ["capa", "compra"]) if (dados[k] && !/^(https?:\/\/|capas\/)/.test(dados[k])) { $("#livroErro").textContent = "Os links precisam começar com https://"; return; }
   $("#livroErro").textContent = "";
+  const btn = e.target.querySelector("button[type=submit]"); btn.disabled = true;
   try {
-    if (S.editLivro) await setDoc(doc(db, "livros", S.editLivro), dados, { merge: true });
-    else await addDoc(collection(db, "livros"), { ...dados, ordem: (Math.max(0, ...S.livros.map(l => l.ordem || 0)) + 1) });
+    const id = S.editLivro || doc(collection(db, "livros")).id;
+    if (S.capaNova) {
+      const v = Date.now();
+      await setDoc(doc(db, "capas", id), { img: S.capaNova });
+      dados.capaDb = true; dados.capaV = v;
+      guardarCapaNoCache(id, v, S.capaNova);
+    } else if (S.tirarCapa) {
+      dados.capaDb = false;
+      await deleteDoc(doc(db, "capas", id)).catch(() => {});
+    }
+    if (S.editLivro) await setDoc(doc(db, "livros", id), dados, { merge: true });
+    else await setDoc(doc(db, "livros", id), { ...dados, ordem: (Math.max(0, ...S.livros.map(l => l.ordem || 0)) + 1) });
     limparLivro();
-  } catch (err) { console.error(err); $("#livroErro").textContent = "Não foi possível salvar o livro."; }
+  } catch (err) {
+    console.error(err);
+    $("#livroErro").textContent = "Não foi possível salvar o livro. Se enviou uma capa, confira se as regras novas já foram publicadas no Firebase.";
+  } finally { btn.disabled = false; }
 });
 function renderLivros() {
   $("#importarArea").innerHTML = S.livros.length ? "" : `<div class="caixa"><h3>Começar o acervo</h3>
@@ -357,7 +392,7 @@ function renderLivros() {
     <button class="btn solid" type="button" id="btnImportar">Importar acervo inicial</button><p class="erro" id="impErro"></p></div>`;
   $("#btnImportar")?.addEventListener("click", importar);
   $("#tLivros").innerHTML = S.livros.map(l => `<tr>
-    <td style="width:52px">${l.capa ? `<img src="${esc(l.capa)}" alt="" style="width:44px;aspect-ratio:2/3;object-fit:cover">` : ""}</td>
+    <td style="width:52px">${l.capa || l.capaDb ? capaHTML(l, "mini-capa") : ""}</td>
     <td><b style="font-family:var(--f-display);font-size:18px">${esc(l.titulo)}</b><br><span class="small">${esc(l.autor)}</span></td>
     <td>${l.compra ? '<span class="chip verde">tem link</span>' : '<span class="chip">sem link</span>'}</td>
     <td><div class="acoes"><button class="btn mini" type="button" data-editlivro="${esc(l.id)}">Editar</button>
@@ -367,17 +402,23 @@ $("#tLivros").addEventListener("click", async (ev) => {
   const ed = ev.target.closest("[data-editlivro]");
   if (ed) {
     const l = livroPorId(ed.dataset.editlivro); if (!l) return;
-    S.editLivro = l.id;
+    S.editLivro = l.id; S.capaNova = null; S.tirarCapa = false;
     Object.entries(CAMPOS).forEach(([k, sel]) => $(sel).value = l[k] || "");
     $("#bBrasil").checked = !!l.brasil; $("#bEscritora").checked = !!l.escritora;
     $("#tituloLivro").textContent = "Editar livro"; $("#btnCancelarLivro").hidden = false;
+    $("#capaErro").textContent = "";
+    mostrarPrevia(l.capa || l.capaDb ? capaHTML(l) : "");
     $("#formLivro").scrollIntoView({ behavior: "smooth", block: "nearest" });
     return;
   }
   const ap = ev.target.closest("[data-apagalivro]");
   if (ap) {
     if (ap.dataset.confirma !== "1") { ap.dataset.confirma = "1"; ap.textContent = "Confirmar?"; return; }
-    try { await deleteDoc(doc(db, "livros", ap.dataset.apagalivro)); } catch (err) { console.error(err); }
+    const id = ap.dataset.apagalivro, tinhaCapa = !!livroPorId(id)?.capaDb;
+    try {
+      await deleteDoc(doc(db, "livros", id));
+      if (tinhaCapa) await deleteDoc(doc(db, "capas", id)).catch(() => {});
+    } catch (err) { console.error(err); }
   }
 });
 async function importar() {

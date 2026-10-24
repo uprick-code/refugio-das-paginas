@@ -83,10 +83,63 @@ export function diasAte(iso) {
   return Math.round((parseData(iso) - hoje) / 864e5);
 }
 
+// Capas: ou um link/arquivo do site (campo "capa"), ou uma imagem enviada pelo painel,
+// guardada à parte na coleção "capas" (campo "capaDb") e carregada só quando aparece na tela.
+const PIXEL = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+const cacheCapas = new Map();
 export function capaHTML(livro, cls = "") {
+  const alt = `Capa de ${esc(livro.titulo)}`;
+  if (livro.capaDb) {
+    const chave = `${livro.id}:${livro.capaV || 0}`;
+    const pronta = cacheCapas.get(chave);
+    return `<img class="capa-db ${cls}" src="${pronta || PIXEL}" alt="${alt}" ${pronta ? "" : `data-capadb="${esc(livro.id)}" data-chave="${esc(chave)}"`}>`;
+  }
   return livro.capa
-    ? `<img class="${cls}" src="${esc(livro.capa)}" alt="Capa de ${esc(livro.titulo)}" loading="lazy">`
+    ? `<img class="${cls}" src="${esc(livro.capa)}" alt="${alt}" loading="lazy">`
     : `<div class="sem-capa ${cls}">${esc(livro.titulo)}</div>`;
+}
+export function guardarCapaNoCache(livroId, capaV, img) { cacheCapas.set(`${livroId}:${capaV || 0}`, img); }
+
+const observador = "IntersectionObserver" in window ? new IntersectionObserver((itens) => {
+  itens.forEach(i => { if (i.isIntersecting) { observador.unobserve(i.target); baixarCapa(i.target); } });
+}, { rootMargin: "300px" }) : null;
+const pedidos = new Map();
+async function baixarCapa(img) {
+  const id = img.dataset.capadb, chave = img.dataset.chave;
+  if (!id) return;
+  if (!pedidos.has(chave)) pedidos.set(chave, getDoc(doc(db, "capas", id)).then(s => {
+    const dado = s.exists() ? s.data().img : null;
+    if (dado) cacheCapas.set(chave, dado);
+    return dado;
+  }).catch(() => null));
+  const dado = await pedidos.get(chave);
+  if (dado) { img.src = dado; img.removeAttribute("data-capadb"); }
+}
+// Chamar depois de cada atualização da tela.
+export function carregarCapas(raiz = document) {
+  raiz.querySelectorAll("img[data-capadb]").forEach(img => {
+    if (img.dataset.obs) return;
+    img.dataset.obs = "1";
+    observador ? observador.observe(img) : baixarCapa(img);
+  });
+}
+
+// Reduz uma imagem escolhida no aparelho para o tamanho de capa (até 300 × 450) e devolve um JPEG em texto.
+export async function prepararCapa(arquivo) {
+  if (!arquivo || !arquivo.type.startsWith("image/")) throw new Error("Escolha um arquivo de imagem (JPG ou PNG).");
+  const url = URL.createObjectURL(arquivo);
+  try {
+    const imagem = await new Promise((ok, falha) => { const i = new Image(); i.onload = () => ok(i); i.onerror = falha; i.src = url; });
+    const escala = Math.min(1, 300 / imagem.naturalWidth, 450 / imagem.naturalHeight);
+    const w = Math.max(1, Math.round(imagem.naturalWidth * escala)), h = Math.max(1, Math.round(imagem.naturalHeight * escala));
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h); ctx.drawImage(imagem, 0, 0, w, h);
+    let q = 0.85, dado = c.toDataURL("image/jpeg", q);
+    while (dado.length > 200000 && q > 0.4) { q -= 0.1; dado = c.toDataURL("image/jpeg", q); }
+    return dado;
+  } catch (e) {
+    throw new Error("Não foi possível ler essa imagem. Tente um print da capa ou um arquivo JPG/PNG.");
+  } finally { URL.revokeObjectURL(url); }
 }
 
 export function ligarTema(botao) {
@@ -98,3 +151,6 @@ export function ligarTema(botao) {
     try { localStorage.setItem("refugio-tema", r.dataset.theme); } catch (e) {}
   });
 }
+
+// Sempre que a tela muda, procura capas novas para carregar.
+new MutationObserver(() => carregarCapas()).observe(document.body, { childList: true, subtree: true });

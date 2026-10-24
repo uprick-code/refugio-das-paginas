@@ -22,6 +22,11 @@ As leitoras entram com **usuário + senha**. Por baixo, o Firebase usa um e-mail
 3. **Publicar o site**: GitHub → Settings → Pages → Source: *Deploy from a branch* → `main` / `(root)` → Save.
 4. Entrar no site como `tais` → **Painel da Taís** → aba **Acervo** → **Importar acervo inicial** (importa os 20 livros e cria o 1º encontro).
 
+## Capas
+
+- As 20 capas iniciais estão na pasta `capas/` deste repositório.
+- Capas enviadas pelo painel (botão "Enviar imagem da capa") são reduzidas no navegador para até 300 × 450 e guardadas no Firestore, na coleção `capas` (uma ficha por livro), sem precisar do Cloud Storage. Cada capa ocupa de 20 a 40 KB.
+
 ## Administradoras
 
 A lista fica em dois lugares, que precisam bater: `ADMINS` em `js/firebase.js` e `isAdmin()` em `firestore.rules`.

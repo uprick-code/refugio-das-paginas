@@ -106,7 +106,20 @@
             <div class="field"><label for="bMeta">Gênero · país</label><input type="text" id="bMeta" maxlength="80" placeholder="Romance · Brasil"></div>
             <div class="field"><label for="bChamada">Frase de chamada</label><input type="text" id="bChamada" maxlength="140"></div>
             <div class="field"><label for="bSinopse">Sinopse</label><textarea id="bSinopse" rows="5" maxlength="1200"></textarea></div>
-            <div class="field"><label for="bCapa">Link da imagem da capa</label><input type="text" id="bCapa" maxlength="500" placeholder="https://…"></div>
+            <div class="field"><label for="bArquivo">Capa</label>
+              <div class="capa-envio">
+                <div class="capa-previa" id="capaPrevia"><span class="small">sem capa</span></div>
+                <div style="display:grid;gap:8px;align-content:start;min-width:0">
+                  <input type="file" id="bArquivo" accept="image/*" class="visually-hidden">
+                  <label for="bArquivo" class="btn mini" style="justify-self:start">Enviar imagem da capa</label>
+                  <button class="btn mini perigo" type="button" id="btnTirarCapa" hidden style="justify-self:start">Tirar imagem enviada</button>
+                  <span class="small">Foto ou print da capa, do celular ou do computador. O site reduz a imagem sozinho.</span>
+                </div>
+              </div>
+              <p class="erro" id="capaErro" role="alert"></p>
+            </div>
+            <div class="field"><label for="bCapa">Ou link da imagem da capa</label><input type="text" id="bCapa" maxlength="500" placeholder="https://…">
+              <span class="small">Usado só quando não há imagem enviada.</span></div>
             <div class="field"><label for="bCompra">Link de compra</label><input type="text" id="bCompra" maxlength="500" placeholder="https://…"></div>
             <div class="field"><label for="bAviso">Aviso de conteúdo (opcional)</label><input type="text" id="bAviso" maxlength="60" placeholder="cenas de violência"></div>
             <div class="checks">

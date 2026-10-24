@@ -410,7 +410,7 @@ function renderCalendario() {
       <span class="small" style="font-family:var(--f-type)">${d.getFullYear()}</span>
       <span class="m">${MESES_CAP[d.getMonth()]}</span>
       <span class="when">${dataCurta(e.data)}${e.hora ? " · " + esc(e.hora) : ""}${e.local ? " · " + esc(e.local) : ""}</span>
-      ${l ? `<div style="display:flex;gap:10px;align-items:flex-start">${l.capa ? `<img src="${esc(l.capa)}" alt="">` : ""}<span style="font-family:var(--f-display);font-size:17px;line-height:1.2">${esc(l.titulo)}</span></div>`
+      ${l ? `<div style="display:flex;gap:10px;align-items:flex-start">${l.capa || l.capaDb ? capaHTML(l) : ""}<span style="font-family:var(--f-display);font-size:17px;line-height:1.2">${esc(l.titulo)}</span></div>`
           : `<span class="small">${esc(e.titulo || "Livro escolhido na votação")}</span>`}
     </div>`;
   }).join("") : `<p class="vazio">As datas ainda vão ser combinadas.</p>`;

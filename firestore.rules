@@ -59,6 +59,16 @@ service cloud.firestore {
       }
     }
 
+    // Capas enviadas pelo painel (imagem reduzida, guardada como texto).
+    match /capas/{id} {
+      allow read: if isMember();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['img'])
+        && request.resource.data.img is string
+        && request.resource.data.img.size() < 400000;
+      allow delete: if isAdmin();
+    }
+
     match /encontros/{id} {
       allow read: if isMember();
       allow write: if isAdmin();
