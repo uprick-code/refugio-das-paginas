@@ -1,0 +1,87 @@
+rules_version = '2';
+// Regras de segurança do Refúgio das Páginas.
+// Cole este arquivo inteiro em: Firebase → Firestore Database → Regras → Publicar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null && request.auth.token.email != null; }
+    // Administradoras: precisa bater com ADMINS em js/firebase.js.
+    function isAdmin() {
+      return signedIn() && request.auth.token.email in [
+        'tais.1@refugio-das-paginas.firebaseapp.com',
+        'rick.1@refugio-das-paginas.firebaseapp.com'
+      ];
+    }
+    // "ana.2@..." -> "ana"
+    function uname() { return request.auth.token.email.split('@')[0].split('[.]')[0]; }
+    function membro(u) { return get(/databases/$(database)/documents/membros/$(u)).data; }
+    function isMe(u) {
+      return signedIn() && u == uname() && membro(u).uid == request.auth.uid && membro(u).ativo == true;
+    }
+    function isMember() { return isAdmin() || isMe(uname()); }
+    function votacao() { return get(/databases/$(database)/documents/config/clube).data.votacao; }
+
+    // Só diz a "geração" da senha de um usuário, para o login funcionar. Não dá para listar.
+    match /logins/{u} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin();
+    }
+
+    match /membros/{u} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+      // A própria leitora só pode marcar que já trocou a senha provisória.
+      allow update: if isMe(u)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['trocarSenha'])
+        && request.resource.data.trocarSenha == false;
+    }
+
+    match /config/{d} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+    }
+
+    match /livros/{id} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+
+      match /notas/{nota} {
+        allow read: if isMember();
+        allow create: if isMe(request.resource.data.autor)
+          && request.resource.data.keys().hasOnly(['autor', 'texto', 'tipo', 'trecho', 'criadoEm'])
+          && request.resource.data.texto is string
+          && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 600
+          && request.resource.data.tipo in ['imp', 'cit']
+          && request.resource.data.trecho in [0, 1, 2]
+          && request.resource.data.criadoEm == request.time;
+        allow delete: if isAdmin() || isMe(resource.data.autor);
+      }
+    }
+
+    match /encontros/{id} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+
+      match /presencas/{u} {
+        allow read: if isMember();
+        allow create, update: if isMe(u)
+          && request.resource.data.keys().hasOnly(['modo', 'lanche', 'em'])
+          && request.resource.data.modo in ['presencial', 'online', 'nao']
+          && request.resource.data.lanche is string && request.resource.data.lanche.size() <= 60;
+        allow delete: if isAdmin() || isMe(u);
+      }
+    }
+
+    // Cada leitora só vê o próprio voto. Só a administradora conta os votos.
+    match /votos/{rodada}/v/{u} {
+      allow read: if isMe(u) || isAdmin();
+      allow create, update: if isMe(u)
+        && votacao().status == 'aberta'
+        && votacao().rodada == rodada
+        && request.resource.data.keys().hasOnly(['livro', 'em'])
+        && request.resource.data.livro in votacao().candidatos;
+      allow delete: if isAdmin();
+    }
+  }
+}

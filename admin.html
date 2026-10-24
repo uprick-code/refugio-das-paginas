@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel da Taís · Refúgio das Páginas</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Courier+Prime:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&family=Pinyon+Script&display=swap">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+<nav class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">Refúgio das Páginas</a>
+    <div class="navlinks"><a href="index.html">← Voltar ao site</a></div>
+    <div class="quem-sou"><span id="nomeTopo"></span><button class="linkbtn" type="button" id="btnSair">Sair</button></div>
+  </div>
+</nav>
+
+<main class="wrap" style="padding-top:34px">
+  <div class="carregando" id="carregando">Abrindo o painel…</div>
+  <div id="semAcesso" hidden class="urna" style="margin-top:40px"><h3>Este painel é só da Taís</h3><p><a href="index.html">Voltar ao site</a></p></div>
+
+  <div id="painel" hidden>
+    <div class="sec-head"><span class="label">Curadoria e mediação</span><h2>Painel da Taís</h2></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" type="button" data-tab="leitoras" aria-selected="true">Leitoras</button>
+      <button class="tab" role="tab" type="button" data-tab="encontros" aria-selected="false">Encontros</button>
+      <button class="tab" role="tab" type="button" data-tab="votacao" aria-selected="false">Votação</button>
+      <button class="tab" role="tab" type="button" data-tab="acervo" aria-selected="false">Acervo</button>
+    </div>
+
+    <!-- LEITORAS -->
+    <section data-painel="leitoras">
+      <div class="painel-grid">
+        <div class="caixa">
+          <h3>Nova leitora</h3>
+          <form id="formLeitora" autocomplete="off">
+            <div class="field"><label for="lNome">Nome</label><input type="text" id="lNome" maxlength="40" required placeholder="Ana Paula"></div>
+            <div class="field"><label for="lUsuario">Usuário</label><input type="text" id="lUsuario" maxlength="24" required autocapitalize="none" spellcheck="false" placeholder="anapaula">
+              <span class="small">Só letras minúsculas, números e hífen.</span></div>
+            <div class="field"><label for="lSenha">Senha provisória</label>
+              <div style="display:flex;gap:8px"><input type="text" id="lSenha" minlength="6" required><button class="btn mini" type="button" id="btnGerar">Gerar</button></div></div>
+            <button class="btn solid" type="submit" id="btnCriar">Criar acesso</button>
+            <p class="erro" id="leitoraErro" role="alert"></p>
+          </form>
+          <div id="msgArea" hidden style="display:grid;gap:10px">
+            <span class="label">Mensagem para o WhatsApp</span>
+            <div class="msg-zap" id="msgZap"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn mini" type="button" id="btnCopiar">Copiar mensagem</button>
+              <a class="btn mini" id="btnZap" href="#" target="_blank" rel="noopener">Abrir no WhatsApp ↗</a>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="tabela-wrap"><table><thead><tr><th>Nome</th><th>Usuário</th><th>Situação</th><th></th></tr></thead><tbody id="tLeitoras"></tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENCONTROS -->
+    <section data-painel="encontros" hidden>
+      <div class="painel-grid">
+        <div class="caixa">
+          <h3 id="tituloEncontro">Novo encontro</h3>
+          <form id="formEncontro" autocomplete="off">
+            <div class="linha">
+              <div class="field"><label for="eData">Data</label><input type="date" id="eData" required></div>
+              <div class="field"><label for="eHora">Horário</label><input type="time" id="eHora" value="16:00"></div>
+            </div>
+            <div class="field"><label for="eLocal">Local</label><input type="text" id="eLocal" maxlength="80" placeholder="Restaurante Mirante Bistrô"></div>
+            <div class="field"><label for="eEnd">Endereço</label><input type="text" id="eEnd" maxlength="140" placeholder="Rua 109, nº 453 · Canto da Praia · Itapema/SC"></div>
+            <div class="field"><label for="ePauta">Pauta (opcional)</label><input type="text" id="ePauta" maxlength="80" placeholder="Encontro de abertura"></div>
+            <div class="field"><label for="eLivro">Livro</label><select id="eLivro"></select>
+              <span class="small">Normalmente fica vazio: o livro entra sozinho quando a votação é revelada.</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn solid" type="submit">Salvar encontro</button>
+              <button class="btn" type="button" id="btnCancelarEnc" hidden>Cancelar edição</button>
+            </div>
+            <p class="erro" id="encErro" role="alert"></p>
+          </form>
+        </div>
+        <div style="display:grid;gap:22px">
+          <div class="tabela-wrap"><table><thead><tr><th>Data</th><th>Local</th><th>Livro</th><th>Presenças</th><th></th></tr></thead><tbody id="tEncontros"></tbody></table></div>
+          <div class="caixa" id="presencasCaixa" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VOTAÇÃO -->
+    <section data-painel="votacao" hidden>
+      <div id="votacaoPainel"></div>
+    </section>
+
+    <!-- ACERVO -->
+    <section data-painel="acervo" hidden>
+      <div class="painel-grid">
+        <div class="caixa">
+          <h3 id="tituloLivro">Novo livro</h3>
+          <form id="formLivro" autocomplete="off">
+            <div class="field"><label for="bTitulo">Título</label><input type="text" id="bTitulo" maxlength="120" required></div>
+            <div class="field"><label for="bAutor">Autor(a)</label><input type="text" id="bAutor" maxlength="80" required></div>
+            <div class="field"><label for="bMeta">Gênero · país</label><input type="text" id="bMeta" maxlength="80" placeholder="Romance · Brasil"></div>
+            <div class="field"><label for="bChamada">Frase de chamada</label><input type="text" id="bChamada" maxlength="140"></div>
+            <div class="field"><label for="bSinopse">Sinopse</label><textarea id="bSinopse" rows="5" maxlength="1200"></textarea></div>
+            <div class="field"><label for="bCapa">Link da imagem da capa</label><input type="text" id="bCapa" maxlength="500" placeholder="https://…"></div>
+            <div class="field"><label for="bCompra">Link de compra</label><input type="text" id="bCompra" maxlength="500" placeholder="https://…"></div>
+            <div class="field"><label for="bAviso">Aviso de conteúdo (opcional)</label><input type="text" id="bAviso" maxlength="60" placeholder="cenas de violência"></div>
+            <div class="checks">
+              <label><input type="checkbox" id="bBrasil"> Autor(a) brasileiro(a)</label>
+              <label><input type="checkbox" id="bEscritora"> Escrito por mulher</label>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn solid" type="submit">Salvar livro</button>
+              <button class="btn" type="button" id="btnCancelarLivro" hidden>Cancelar edição</button>
+            </div>
+            <p class="erro" id="livroErro" role="alert"></p>
+          </form>
+        </div>
+        <div style="display:grid;gap:16px;align-content:start">
+          <div id="importarArea"></div>
+          <div class="tabela-wrap"><table><thead><tr><th></th><th>Livro</th><th>Compra</th><th></th></tr></thead><tbody id="tLivros"></tbody></table></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="brand">Refúgio das Páginas</span>
+    <button class="theme-btn" type="button" id="themeBtn">Alternar claro/escuro</button>
+  </div>
+</footer>
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

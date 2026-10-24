@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Refúgio das Páginas</title>
+<meta name="description" content="Clube de leitura com curadoria e mediação de Taís Rick.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Courier+Prime:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&family=Pinyon+Script&display=swap">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+<nav class="top" aria-label="Seções">
+  <div class="wrap">
+    <a class="brand" href="#">Refúgio das Páginas</a>
+    <div class="navlinks" id="navlinks" hidden>
+      <a href="#encontro">Encontro</a>
+      <a href="#votacao">Votação</a>
+      <a href="#livro">Livro do mês</a>
+      <a href="#acervo">Acervo</a>
+      <a href="#calendario">Calendário</a>
+      <a href="#estante">Estante</a>
+      <a href="#como-funciona">Combinados</a>
+      <a href="admin.html" id="linkPainel" hidden>Painel da Taís</a>
+    </div>
+    <div class="quem-sou" id="quemSou" hidden><span id="nomeTopo"></span><button class="linkbtn" type="button" id="btnSair">Sair</button></div>
+  </div>
+</nav>
+
+<div class="carregando" id="carregando">Abrindo o caderno…</div>
+
+<!-- ENTRADA -->
+<div class="wrap" id="telaLogin" hidden>
+  <header class="rosto">
+    <svg class="corner tl" viewBox="0 0 230 200" aria-hidden="true"></svg>
+    <svg class="corner br" viewBox="0 0 230 200" aria-hidden="true"></svg>
+    <div class="inner">
+      <p class="label" style="letter-spacing:.3em;color:var(--ink)">Clube de leitura</p>
+      <h1>Refúgio <em>das</em> Páginas</h1>
+      <p class="quote">"Ler é sonhar pela mão de outrem." — Fernando Pessoa</p>
+      <svg class="dente" viewBox="0 0 90 110" aria-hidden="true"></svg>
+      <form class="login-box" id="formLogin" autocomplete="on">
+        <div class="field"><label for="loginUsuario">Usuário</label>
+          <input type="text" id="loginUsuario" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
+        <div class="field"><label for="loginSenha">Senha</label>
+          <input type="password" id="loginSenha" autocomplete="current-password" required></div>
+        <button class="btn solid" type="submit" id="btnEntrar">Entrar</button>
+        <p class="erro" id="loginErro" role="alert"></p>
+        <p class="small">Seu usuário e sua senha provisória chegam pelo WhatsApp, enviados pela Taís.</p>
+      </form>
+    </div>
+  </header>
+</div>
+
+<!-- ÁREA DAS LEITORAS -->
+<main id="telaApp" hidden>
+  <div class="wrap" style="padding-top:34px">
+    <p class="convidada" id="saudacao"></p>
+  </div>
+
+  <section id="encontro"><div class="wrap" style="padding-top:18px">
+    <div class="sec-head"><span class="label">Próximo encontro</span><h2 id="encontroTitulo">Um lugar guardado para você</h2></div>
+    <div id="encontroArea"></div>
+  </div></section>
+
+  <div class="washi" aria-hidden="true"></div>
+
+  <section id="votacao"><div class="wrap">
+    <div class="sec-head"><span class="label">Votação</span><h2>O livro do próximo mês</h2>
+      <p>A Taís escolhe duas ou três opções do acervo e cada uma vota em uma. O placar fica escondido até a revelação no encontro.</p></div>
+    <div id="votacaoArea"></div>
+  </div></section>
+
+  <div class="washi alt" aria-hidden="true"></div>
+
+  <section id="livro"><div class="wrap">
+    <div class="sec-head"><span class="label">Livro do mês</span><h2 id="livroMesTitulo">Leitura em andamento</h2></div>
+    <div id="livroMesArea"></div>
+  </div></section>
+
+  <div class="washi" aria-hidden="true"></div>
+
+  <section id="acervo"><div class="wrap">
+    <div class="sec-head"><span class="label">Acervo de sugestões</span><h2>Os livros que podem entrar na votação</h2>
+      <p>A lista de onde a Taís tira as opções de cada mês. Leia as sinopses e vá escolhendo os seus preferidos.</p></div>
+    <div class="filtros" id="filtros" role="group" aria-label="Filtrar acervo"></div>
+    <div class="acervo" id="acervoGrid"></div>
+  </div></section>
+
+  <div class="washi alt" aria-hidden="true"></div>
+
+  <section id="calendario"><div class="wrap">
+    <div class="sec-head"><span class="label">Calendário</span><h2>Nossos encontros</h2></div>
+    <div class="cal" id="cal"></div>
+  </div></section>
+
+  <div class="washi" aria-hidden="true"></div>
+
+  <section id="estante"><div class="wrap">
+    <div class="sec-head"><span class="label">Estante do clube</span><h2>Uma lombada para cada encontro</h2>
+      <p>Como no diário de leitura: as lombadas começam em branco e ganham cor conforme o grupo lê.</p></div>
+    <div class="estante-scroll"><div class="estante"><div class="prateleira" id="prateleira"></div><div class="tabua"></div></div></div>
+  </div></section>
+
+  <div class="washi alt" aria-hidden="true"></div>
+
+  <section id="como-funciona"><div class="wrap">
+    <div class="sec-head"><span class="label">Combinados</span><h2>Como funciona</h2></div>
+    <div class="regras">
+      <div class="regra"><h3>Um livro por mês, escolhido por todas</h3><p>A Taís seleciona duas ou três opções do acervo e o grupo vota. O mais votado é o livro do mês seguinte, revelado no encontro.</p></div>
+      <div class="regra"><h3>O livro é seu</h3><p>Cada participante compra o seu exemplar, físico ou digital. O link de compra fica na seção Livro do mês.</p></div>
+      <div class="regra"><h3>Confirme sua presença</h3><p>Aqui no site, até uma semana antes. Somos no máximo 15, e a confirmação ajuda a organizar o espaço.</p></div>
+      <div class="regra"><h3>Não terminou? Venha mesmo assim</h3><p>Só saiba que, no encontro, os spoilers estão liberados.</p></div>
+      <div class="regra"><h3>Spoilers, só no encontro</h3><p>No mural e no WhatsApp, marque até onde o seu comentário vai. Quem está atrás vê o texto embaçado.</p></div>
+      <div class="regra"><h3>O encontro</h3><p>Cerca de duas horas, com mediação da Taís: conversa livre, discussão do livro e, no fim, a nota de cada uma, uma frase marcante e a revelação do próximo livro.</p></div>
+      <div class="regra"><h3>Quem está a distância fala primeiro</h3><p>Nos encontros híbridos, quem participa online abre cada rodada de conversa.</p></div>
+      <div class="regra"><h3>Toda leitura vale</h3><p>Amou ou detestou, tudo pode ser dito. Todas têm espaço para falar e nenhuma opinião é desqualificada.</p></div>
+      <div class="regra"><h3>Quer trazer alguém?</h3><p>Avise a Taís antes.</p></div>
+      <div class="regra"><h3>Bookjournal</h3><p>Se você faz, traga para mostrar. É opcional e sempre inspirador.</p></div>
+      <div class="regra"><h3>Esqueceu a senha?</h3><p>Fale com a Taís. Ela gera uma senha provisória nova e você cria a sua no próximo acesso.</p></div>
+    </div>
+  </div></section>
+</main>
+
+<!-- TROCA DE SENHA -->
+<div class="modal" id="modalSenha" hidden role="dialog" aria-modal="true" aria-labelledby="tituloSenha">
+  <div>
+    <h2 id="tituloSenha">Crie sua senha</h2>
+    <p class="small">Você entrou com uma senha provisória. Escolha uma senha só sua, com pelo menos 6 caracteres.</p>
+    <form id="formSenha">
+      <div class="field"><label for="senhaNova">Nova senha</label><input type="password" id="senhaNova" autocomplete="new-password" minlength="6" required></div>
+      <div class="field"><label for="senhaConf">Repita a senha</label><input type="password" id="senhaConf" autocomplete="new-password" minlength="6" required></div>
+      <button class="btn solid" type="submit">Salvar minha senha</button>
+      <p class="erro" id="senhaErro" role="alert"></p>
+    </form>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <span class="brand">Refúgio das Páginas</span>
+    <span class="small" style="font-family:var(--f-type)">Curadoria e mediação de Taís Rick</span>
+    <button class="theme-btn" type="button" id="themeBtn">Alternar claro/escuro</button>
+  </div>
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
