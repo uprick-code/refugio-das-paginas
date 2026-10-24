@@ -59,7 +59,13 @@ service cloud.firestore {
       }
     }
 
-    // Capas enviadas pelo painel (imagem reduzida, guardada como texto).
+    // Especiais de autoras/temas. As leitoras só veem os publicados.
+    match /especiais/{id} {
+      allow read: if isAdmin() || (isMember() && resource.data.publicado == true);
+      allow write: if isAdmin();
+    }
+
+    // Capas e fotos enviadas pelo painel (imagem reduzida, guardada como texto).
     match /capas/{id} {
       allow read: if isMember();
       allow create, update: if isAdmin()

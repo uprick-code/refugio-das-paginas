@@ -20,7 +20,7 @@ $("#btnSair").addEventListener("click", () => signOut(auth).then(() => location.
 const appCadastro = initializeApp(firebaseConfig, "cadastro");
 const authCadastro = initializeAuth(appCadastro, { persistence: inMemoryPersistence });
 
-const S = { membros: [], encontros: [], livros: [], clube: {}, editEnc: null, editLivro: null, placarVisivel: false, contagem: null };
+const S = { especiais: [], editEsp: null, fotoNova: null, tirarFoto: false, membros: [], encontros: [], livros: [], clube: {}, editEnc: null, editLivro: null, placarVisivel: false, contagem: null };
 const livroPorId = (id) => S.livros.find(l => l.id === id);
 const SITE = new URL("./", location.href).href;
 
@@ -55,7 +55,11 @@ function iniciar() {
   onSnapshot(collection(db, "livros"), s => {
     S.livros = s.docs.map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (a.ordem ?? 999) - (b.ordem ?? 999) || a.titulo.localeCompare(b.titulo));
-    renderLivros(); renderEncontros(); renderVotacao();
+    renderLivros(); renderEncontros(); renderVotacao(); renderLivrosEsp();
+  }, falha);
+  onSnapshot(collection(db, "especiais"), s => {
+    S.especiais = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
+    renderEspeciais();
   }, falha);
   onSnapshot(doc(db, "config", "clube"), s => { S.clube = s.exists() ? s.data() : {}; renderVotacao(); }, falha);
   $("#lSenha").value = gerarSenha();
@@ -434,3 +438,94 @@ async function importar() {
     await b.commit();
   } catch (err) { console.error(err); $("#impErro").textContent = "Não foi possível importar. Confira se as regras de segurança já foram publicadas."; $("#btnImportar").disabled = false; }
 }
+
+/* ---------------- especiais ---------------- */
+const fotoDe = (e) => ({ id: "esp_" + e.id, titulo: e.titulo, capaDb: e.fotoDb, capaV: e.fotoV, capa: "" });
+const CAMPOS_ESP = { titulo: "#xTitulo", autor: "#xAutor", chamada: "#xChamada", bio: "#xBio", linhaTempo: "#xTempo", curiosidades: "#xCurios", links: "#xLinks" };
+function renderLivrosEsp(marcados) {
+  const sel = marcados || [...document.querySelectorAll("#xLivros input:checked")].map(i => i.value);
+  $("#xLivros").innerHTML = S.livros.map(l => `<label><input type="checkbox" value="${esc(l.id)}" ${sel.includes(l.id) ? "checked" : ""}> ${esc(l.titulo)} <span class="small">· ${esc(l.autor)}</span></label>`).join("")
+    || `<p class="small">O acervo está vazio.</p>`;
+}
+function previaFoto(html) {
+  $("#fotoPrevia").innerHTML = html || `<span class="small">sem foto</span>`;
+  const atual = S.editEsp && S.especiais.find(x => x.id === S.editEsp);
+  $("#btnTirarFoto").hidden = !S.fotoNova && !(atual?.fotoDb && !S.tirarFoto);
+}
+function limparEsp() {
+  S.editEsp = null; S.fotoNova = null; S.tirarFoto = false; $("#formEsp").reset();
+  $("#tituloEsp").textContent = "Novo especial"; $("#btnCancelarEsp").hidden = true;
+  $("#fotoErro").textContent = ""; $("#espErro").textContent = ""; previaFoto(""); renderLivrosEsp([]);
+}
+$("#btnCancelarEsp").addEventListener("click", limparEsp);
+$("#xArquivo").addEventListener("change", async (e) => {
+  const arq = e.target.files[0]; if (!arq) return;
+  $("#fotoErro").textContent = "";
+  try { S.fotoNova = await prepararCapa(arq); S.tirarFoto = false; previaFoto(`<img src="${S.fotoNova}" alt="Prévia da foto">`); }
+  catch (err) { $("#fotoErro").textContent = err.message; }
+  e.target.value = "";
+});
+$("#btnTirarFoto").addEventListener("click", () => { S.fotoNova = null; if (S.editEsp) S.tirarFoto = true; previaFoto(""); });
+$("#formEsp").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const dados = Object.fromEntries(Object.entries(CAMPOS_ESP).map(([k, sel]) => [k, $(sel).value.trim()]));
+  dados.livros = [...document.querySelectorAll("#xLivros input:checked")].map(i => i.value);
+  dados.publicado = $("#xPublicado").checked;
+  $("#espErro").textContent = "";
+  const btn = e.target.querySelector("button[type=submit]"); btn.disabled = true;
+  try {
+    const id = S.editEsp || doc(collection(db, "especiais")).id;
+    if (S.fotoNova) {
+      const v = Date.now();
+      await setDoc(doc(db, "capas", "esp_" + id), { img: S.fotoNova });
+      dados.fotoDb = true; dados.fotoV = v;
+      guardarCapaNoCache("esp_" + id, v, S.fotoNova);
+    } else if (S.tirarFoto) {
+      dados.fotoDb = false;
+      await deleteDoc(doc(db, "capas", "esp_" + id)).catch(() => {});
+    }
+    if (S.editEsp) await setDoc(doc(db, "especiais", id), dados, { merge: true });
+    else await setDoc(doc(db, "especiais", id), { ...dados, criadoEm: Date.now() });
+    limparEsp();
+  } catch (err) { console.error(err); $("#espErro").textContent = "Não foi possível salvar o especial. Confira se as regras novas já foram publicadas no Firebase."; }
+  finally { btn.disabled = false; }
+});
+function renderEspeciais() {
+  $("#tEsp").innerHTML = S.especiais.length ? S.especiais.map(x => `<tr>
+    <td style="width:52px">${x.fotoDb ? capaHTML(fotoDe(x), "mini-capa") : ""}</td>
+    <td><b style="font-family:var(--f-display);font-size:18px">${esc(x.titulo)}</b><br><span class="small">${esc(x.autor || "")}</span></td>
+    <td>${x.publicado ? '<span class="chip verde">publicado</span>' : '<span class="chip">rascunho</span>'}</td>
+    <td><div class="acoes">
+      <button class="btn mini" type="button" data-editesp="${esc(x.id)}">Editar</button>
+      <button class="btn mini" type="button" data-pubesp="${esc(x.id)}">${x.publicado ? "Despublicar" : "Publicar"}</button>
+      <button class="btn mini perigo" type="button" data-apagaesp="${esc(x.id)}">Apagar</button></div></td></tr>`).join("")
+    : `<tr><td colspan="4" class="vazio">Nenhum especial ainda. Comece pelo formulário ao lado; ele fica como rascunho até você marcar "Publicado".</td></tr>`;
+}
+$("#tEsp").addEventListener("click", async (ev) => {
+  const ed = ev.target.closest("[data-editesp]");
+  if (ed) {
+    const x = S.especiais.find(y => y.id === ed.dataset.editesp); if (!x) return;
+    S.editEsp = x.id; S.fotoNova = null; S.tirarFoto = false;
+    Object.entries(CAMPOS_ESP).forEach(([k, sel]) => $(sel).value = x[k] || "");
+    $("#xPublicado").checked = !!x.publicado; renderLivrosEsp(x.livros || []);
+    $("#tituloEsp").textContent = "Editar especial"; $("#btnCancelarEsp").hidden = false;
+    previaFoto(x.fotoDb ? capaHTML(fotoDe(x)) : "");
+    $("#formEsp").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    return;
+  }
+  const pb = ev.target.closest("[data-pubesp]");
+  if (pb) {
+    const x = S.especiais.find(y => y.id === pb.dataset.pubesp); if (!x) return;
+    try { await updateDoc(doc(db, "especiais", x.id), { publicado: !x.publicado }); } catch (err) { console.error(err); }
+    return;
+  }
+  const ap = ev.target.closest("[data-apagaesp]");
+  if (ap) {
+    if (ap.dataset.confirma !== "1") { ap.dataset.confirma = "1"; ap.textContent = "Confirmar?"; return; }
+    const id = ap.dataset.apagaesp, tinhaFoto = !!S.especiais.find(y => y.id === id)?.fotoDb;
+    try {
+      await deleteDoc(doc(db, "especiais", id));
+      if (tinhaFoto) await deleteDoc(doc(db, "capas", "esp_" + id)).catch(() => {});
+    } catch (err) { console.error(err); }
+  }
+});

@@ -5,7 +5,7 @@ import {
 } from "./firebase.js";
 import { enfeitarRosto, planta } from "./ornamentos.js";
 import {
-  doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, query, orderBy, serverTimestamp
+  doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const $ = (s) => document.querySelector(s);
@@ -18,7 +18,7 @@ ligarTema($("#themeBtn"));
 const estado = {
   usuario: null, admin: false,
   membros: {}, livros: [], encontros: [], clube: {},
-  presencas: [], meuVoto: null, notas: [],
+  presencas: [], meuVoto: null, notas: [], especiais: [],
   filtro: "todos",
   subs: [], subPresencas: null, subVoto: null, subNotas: null,
   chavePres: null, chaveVoto: null, chaveNotas: null
@@ -58,6 +58,7 @@ $("#formSenha").addEventListener("submit", async (e) => {
 });
 
 function pararTudo() {
+  fecharEspecial(true);
   estado.subs.forEach(u => u()); estado.subs = [];
   [estado.subPresencas, estado.subVoto, estado.subNotas].forEach(u => u && u());
   estado.subPresencas = estado.subVoto = estado.subNotas = null;
@@ -113,6 +114,11 @@ function ouvir() {
   estado.subs.push(onSnapshot(query(collection(db, "encontros"), orderBy("data")), s => {
     estado.encontros = s.docs.map(d => ({ id: d.id, ...d.data() })); render();
   }, falha));
+  estado.subs.push(onSnapshot(query(collection(db, "especiais"), where("publicado", "==", true)), s => {
+    estado.especiais = s.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
+    render();
+  }, falha));
   estado.subs.push(onSnapshot(doc(db, "config", "clube"), s => {
     estado.clube = s.exists() ? s.data() : {}; render();
   }, falha));
@@ -163,7 +169,7 @@ function livroDoMes() {
 function render() {
   if (!estado.usuario) return;
   ajustarInscricoes();
-  renderEncontro(); renderVotacao(); renderLivroMes(); renderAcervo(); renderCalendario(); renderEstante();
+  renderEncontro(); renderVotacao(); renderLivroMes(); renderAcervo(); renderEspeciais(); renderCalendario(); renderEstante();
 }
 
 /* ---------------- encontro e presença ---------------- */
@@ -432,3 +438,64 @@ function renderEstante() {
   }
   $("#prateleira").innerHTML = html + planta("r");
 }
+
+/* ---------------- especiais ---------------- */
+const fotoDe = (e) => ({ id: "esp_" + e.id, titulo: e.titulo, capaDb: e.fotoDb, capaV: e.fotoV, capa: e.fotoUrl || "" });
+function renderEspeciais() {
+  const tem = estado.especiais.length > 0;
+  $("#especiaisBloco").hidden = !tem;
+  $("#linkEspeciais").hidden = !tem;
+  $("#espGrid").innerHTML = estado.especiais.map(e => `
+    <a class="esp-card" href="#esp-${esc(e.id)}">
+      <div class="esp-foto">${e.fotoDb || e.fotoUrl ? capaHTML(fotoDe(e)) : `<div class="sem-capa">${esc(e.autor || e.titulo)}</div>`}</div>
+      <div class="esp-txt"><span class="label">Especial</span><h3>${esc(e.titulo)}</h3>${e.chamada ? `<p>${esc(e.chamada)}</p>` : ""}<span class="esp-ler">Ler o especial →</span></div>
+    </a>`).join("");
+  abrirPeloEndereco();
+}
+
+function linhas(txt) { return String(txt || "").split("\n").map(l => l.trim()).filter(Boolean); }
+function abrirPeloEndereco() {
+  const m = location.hash.match(/^#esp-(.+)$/);
+  const e = m ? estado.especiais.find(x => x.id === decodeURIComponent(m[1])) : null;
+  if (e) abrirEspecial(e); else fecharEspecial(true);
+}
+window.addEventListener("hashchange", () => { if (estado.usuario) abrirPeloEndereco(); });
+
+function abrirEspecial(e) {
+  const v = $("#espView");
+  const lidos = new Set(encontrosPassados().filter(x => x.livroId).map(x => x.livroId));
+  const livros = (e.livros || []).map(livroPorId).filter(Boolean);
+  const tempo = linhas(e.linhaTempo).map(l => { const i = l.search(/\s[—–-]\s|:\s/); return i > 0 ? [l.slice(0, i).trim(), l.slice(i).replace(/^\s*[—–:-]\s*/, "")] : ["", l]; });
+  const curios = linhas(e.curiosidades);
+  const links = linhas(e.links).map(l => { const [rot, url] = l.includes("|") ? l.split("|").map(x => x.trim()) : [l, l]; return { rot, url }; })
+    .filter(x => /^https?:\/\//.test(x.url));
+  v.innerHTML = `<div class="wrap esp-artigo">
+    <button class="btn mini" type="button" id="espFechar">← Voltar ao site</button>
+    <header class="esp-cabeca">
+      <div class="esp-foto grande">${e.fotoDb || e.fotoUrl ? capaHTML(fotoDe(e)) : ""}</div>
+      <div>
+        <p class="esp-script">Especial</p>
+        <h1 id="espTitulo">${esc(e.titulo)}</h1>
+        ${e.autor ? `<p class="label">${esc(e.autor)}</p>` : ""}
+        ${e.chamada ? `<p class="esp-chamada">${esc(e.chamada)}</p>` : ""}
+      </div>
+    </header>
+    ${e.bio ? `<section class="esp-bloco"><h2>Quem é</h2>${linhas(e.bio).map(p => `<p>${esc(p)}</p>`).join("")}</section>` : ""}
+    ${tempo.length ? `<section class="esp-bloco"><h2>Linha do tempo</h2><ol class="tempo">${tempo.map(([a, t]) => `<li><span class="ano">${esc(a)}</span><span>${esc(t)}</span></li>`).join("")}</ol></section>` : ""}
+    ${livros.length ? `<section class="esp-bloco"><h2>No nosso acervo</h2><div class="esp-livros">${livros.map(l => `
+        <div class="livro"><div class="capa-box">${capaHTML(l)}${lidos.has(l.id) ? `<span class="selo">lido pelo clube</span>` : ""}</div>
+        <h3>${esc(l.titulo)}</h3>${l.chamada ? `<p class="chamada">${esc(l.chamada)}</p>` : ""}</div>`).join("")}</div></section>` : ""}
+    ${curios.length ? `<section class="esp-bloco"><h2>Curiosidades</h2><ul class="curios">${curios.map(c => `<li>${esc(c)}</li>`).join("")}</ul></section>` : ""}
+    ${links.length ? `<section class="esp-bloco"><h2>Para ir além</h2><ul class="esp-links">${links.map(l => `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.rot)} ↗</a></li>`).join("")}</ul></section>` : ""}
+    <p class="small" style="margin-top:40px">Especial preparado por Taís Rick para o Refúgio das Páginas.</p>
+  </div>`;
+  const novo = v.hidden || v.dataset.id !== e.id;
+  v.dataset.id = e.id; v.hidden = false; document.body.style.overflow = "hidden";
+  if (novo) v.scrollTop = 0;
+  $("#espFechar").addEventListener("click", () => { location.hash = "especiais"; });
+}
+function fecharEspecial(silencioso) {
+  const v = $("#espView"); if (!v || v.hidden) return;
+  v.hidden = true; v.innerHTML = ""; delete v.dataset.id; document.body.style.overflow = "";
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#espView").hidden) location.hash = "especiais"; });

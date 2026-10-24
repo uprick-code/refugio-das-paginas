@@ -30,6 +30,7 @@
       <button class="tab" role="tab" type="button" data-tab="encontros" aria-selected="false">Encontros</button>
       <button class="tab" role="tab" type="button" data-tab="votacao" aria-selected="false">Votação</button>
       <button class="tab" role="tab" type="button" data-tab="acervo" aria-selected="false">Acervo</button>
+      <button class="tab" role="tab" type="button" data-tab="especiais" aria-selected="false">Especiais</button>
     </div>
 
     <!-- LEITORAS -->
@@ -136,6 +137,48 @@
         <div style="display:grid;gap:16px;align-content:start">
           <div id="importarArea"></div>
           <div class="tabela-wrap"><table><thead><tr><th></th><th>Livro</th><th>Compra</th><th></th></tr></thead><tbody id="tLivros"></tbody></table></div>
+        </div>
+      </div>
+    </section>
+    <!-- ESPECIAIS -->
+    <section data-painel="especiais" hidden>
+      <div class="painel-grid">
+        <div class="caixa">
+          <h3 id="tituloEsp">Novo especial</h3>
+          <form id="formEsp" autocomplete="off">
+            <div class="field"><label for="xTitulo">Título</label><input type="text" id="xTitulo" maxlength="80" required placeholder="Han Kang"></div>
+            <div class="field"><label for="xAutor">Subtítulo</label><input type="text" id="xAutor" maxlength="80" placeholder="Coreia do Sul · Nobel de Literatura 2024"></div>
+            <div class="field"><label for="xChamada">Frase de abertura</label><input type="text" id="xChamada" maxlength="160" placeholder="A escritora que transforma silêncio em linguagem."></div>
+            <div class="field"><span class="lbl">Foto</span>
+              <div class="capa-envio">
+                <div class="capa-previa" id="fotoPrevia"><span class="small">sem foto</span></div>
+                <div style="display:grid;gap:8px;align-content:start;min-width:0">
+                  <input type="file" id="xArquivo" accept="image/*" class="visually-hidden">
+                  <label for="xArquivo" class="btn mini" style="justify-self:start">Enviar foto</label>
+                  <button class="btn mini perigo" type="button" id="btnTirarFoto" hidden style="justify-self:start">Tirar foto</button>
+                  <span class="small">Retrato da autora ou uma imagem que represente o tema.</span>
+                </div>
+              </div>
+              <p class="erro" id="fotoErro" role="alert"></p>
+            </div>
+            <div class="field"><label for="xBio">Quem é</label><textarea id="xBio" rows="6" maxlength="4000" placeholder="Um parágrafo por linha."></textarea></div>
+            <div class="field"><label for="xTempo">Linha do tempo</label><textarea id="xTempo" rows="5" maxlength="3000" placeholder="1970 — Nasce em Gwangju&#10;2007 — Publica A vegetariana&#10;2024 — Recebe o Nobel"></textarea>
+              <span class="small">Um acontecimento por linha, no formato: ano — texto.</span></div>
+            <fieldset><legend>Livros do acervo</legend>
+              <div class="checks" id="xLivros" style="max-height:220px;overflow-y:auto"></div></fieldset>
+            <div class="field"><label for="xCurios">Curiosidades</label><textarea id="xCurios" rows="4" maxlength="3000" placeholder="Uma por linha."></textarea></div>
+            <div class="field"><label for="xLinks">Para ir além (links)</label><textarea id="xLinks" rows="3" maxlength="2000" placeholder="Entrevista na Flip | https://…&#10;Playlist | https://…"></textarea>
+              <span class="small">Um por linha: nome do link | endereço.</span></div>
+            <div class="checks"><label><input type="checkbox" id="xPublicado"> Publicado (as leitoras já veem)</label></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn solid" type="submit">Salvar especial</button>
+              <button class="btn" type="button" id="btnCancelarEsp" hidden>Cancelar edição</button>
+            </div>
+            <p class="erro" id="espErro" role="alert"></p>
+          </form>
+        </div>
+        <div>
+          <div class="tabela-wrap"><table><thead><tr><th></th><th>Especial</th><th>Situação</th><th></th></tr></thead><tbody id="tEsp"></tbody></table></div>
         </div>
       </div>
     </section>

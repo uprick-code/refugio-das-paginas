@@ -27,6 +27,10 @@ As leitoras entram com **usuário + senha**. Por baixo, o Firebase usa um e-mail
 - As 20 capas iniciais estão na pasta `capas/` deste repositório.
 - Capas enviadas pelo painel (botão "Enviar imagem da capa") são reduzidas no navegador para até 300 × 450 e guardadas no Firestore, na coleção `capas` (uma ficha por livro), sem precisar do Cloud Storage. Cada capa ocupa de 20 a 40 KB.
 
+## Especiais
+
+Páginas sobre uma autora, um autor ou um tema, criadas pela Taís no painel (aba **Especiais**): foto, frase de abertura, "quem é", linha do tempo (uma linha por acontecimento, `ano — texto`), livros do acervo, curiosidades e links (`nome | https://…`). Ficam como rascunho até serem marcadas como publicadas. Dados na coleção `especiais`; a foto vai para `capas/esp_<id>`.
+
 ## Administradoras
 
 A lista fica em dois lugares, que precisam bater: `ADMINS` em `js/firebase.js` e `isAdmin()` em `firestore.rules`.

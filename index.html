@@ -21,6 +21,7 @@
       <a href="#votacao">Votação</a>
       <a href="#livro">Livro do mês</a>
       <a href="#acervo">Acervo</a>
+      <a href="#especiais" id="linkEspeciais" hidden>Especiais</a>
       <a href="#calendario">Calendário</a>
       <a href="#estante">Estante</a>
       <a href="#como-funciona">Combinados</a>
@@ -92,6 +93,15 @@
 
   <div class="washi alt" aria-hidden="true"></div>
 
+  <div id="especiaisBloco" hidden>
+  <section id="especiais"><div class="wrap">
+    <div class="sec-head"><span class="label">Especiais</span><h2>Para conhecer de perto</h2>
+      <p>Autoras, autores e temas que a Taís reuniu com calma: biografia, linha do tempo, curiosidades e os livros do acervo.</p></div>
+    <div class="esp-grid" id="espGrid"></div>
+  </div></section>
+  <div class="washi" aria-hidden="true"></div>
+  </div>
+
   <section id="calendario"><div class="wrap">
     <div class="sec-head"><span class="label">Calendário</span><h2>Nossos encontros</h2></div>
     <div class="cal" id="cal"></div>
@@ -124,6 +134,9 @@
     </div>
   </div></section>
 </main>
+
+<!-- LEITURA DE UM ESPECIAL -->
+<div class="esp-view" id="espView" hidden role="dialog" aria-modal="true" aria-labelledby="espTitulo"></div>
 
 <!-- TROCA DE SENHA -->
 <div class="modal" id="modalSenha" hidden role="dialog" aria-modal="true" aria-labelledby="tituloSenha">
