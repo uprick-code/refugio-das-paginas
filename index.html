@@ -29,9 +29,9 @@
       <a href="#estante">Estante</a>
       <a href="#como-funciona">Combinados</a>
       <a href="admin.html" id="linkPainel" hidden>Painel da Taís</a>
-      <div class="menu-conta"><span id="nomeMenu"></span><button class="linkbtn" type="button" id="btnSairMenu">Sair</button></div>
+      <div class="menu-conta"><span id="nomeMenu"></span><span style="display:flex;gap:16px"><button class="linkbtn" type="button" data-trocar-senha>Trocar senha</button><button class="linkbtn" type="button" id="btnSairMenu">Sair</button></span></div>
     </div>
-    <div class="quem-sou" id="quemSou" hidden><span id="nomeTopo"></span><button class="linkbtn" type="button" id="btnSair">Sair</button></div>
+    <div class="quem-sou" id="quemSou" hidden><span id="nomeTopo"></span><button class="linkbtn" type="button" data-trocar-senha>Trocar senha</button><button class="linkbtn" type="button" id="btnSair">Sair</button></div>
   </div>
 </nav>
 
@@ -146,12 +146,17 @@
 <div class="modal" id="modalSenha" hidden role="dialog" aria-modal="true" aria-labelledby="tituloSenha">
   <div>
     <h2 id="tituloSenha">Crie sua senha</h2>
-    <p class="small">Você entrou com uma senha provisória. Escolha uma senha só sua, com pelo menos 6 caracteres.</p>
+    <p class="small" id="textoSenha">Você entrou com uma senha provisória. Escolha uma senha só sua, com pelo menos 6 caracteres.</p>
     <form id="formSenha">
+      <div class="field" id="campoAtual" hidden><label for="senhaAtual">Senha atual</label><input type="password" id="senhaAtual" autocomplete="current-password"></div>
       <div class="field"><label for="senhaNova">Nova senha</label><input type="password" id="senhaNova" autocomplete="new-password" minlength="6" required></div>
       <div class="field"><label for="senhaConf">Repita a senha</label><input type="password" id="senhaConf" autocomplete="new-password" minlength="6" required></div>
-      <button class="btn solid" type="submit">Salvar minha senha</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn solid" type="submit">Salvar minha senha</button>
+        <button class="btn" type="button" id="btnCancelarSenha" hidden>Cancelar</button>
+      </div>
       <p class="erro" id="senhaErro" role="alert"></p>
+      <p class="ok" id="senhaOk" role="status"></p>
     </form>
   </div>
 </div>

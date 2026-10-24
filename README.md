@@ -38,4 +38,5 @@ No topo do painel, o botão **Baixar cópia de segurança** gera um arquivo `.js
 ## Administradoras
 
 A lista fica em dois lugares, que precisam bater: `ADMINS` em `js/firebase.js` e `isAdmin()` em `firestore.rules`.
-Para trocar a senha de uma administradora, apague a conta dela em Authentication e crie de novo com o mesmo e-mail; ao entrar, o site atualiza o cadastro sozinho.
+Qualquer pessoa (leitora ou administradora) troca a própria senha pelo link **Trocar senha**, no topo do site ou no menu do celular, confirmando a senha atual.
+Se uma administradora **esquecer** a senha, apague a conta dela em Authentication e crie de novo com o mesmo e-mail; ao entrar, o site atualiza o cadastro sozinho. Leitoras que esquecem a senha recebem uma nova pelo painel (**Leitoras → Nova senha**).

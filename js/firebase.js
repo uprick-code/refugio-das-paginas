@@ -1,6 +1,6 @@
 // Conexão com o Firebase e funções comuns às duas páginas.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword }
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -52,10 +52,21 @@ export async function entrar(usuarioDigitado, senha) {
   }
 }
 
-export async function trocarSenha(nova) {
+// "atual" é pedida quando a troca é voluntária: o Firebase exige confirmar a senha antes de mudá-la.
+export async function trocarSenha(nova, atual) {
   if (!nova || nova.length < 6) throw new Error("A senha precisa ter pelo menos 6 caracteres.");
-  try { await updatePassword(auth.currentUser, nova); }
+  try {
+    if (atual !== undefined) {
+      try { await reauthenticateWithCredential(auth.currentUser, EmailAuthProvider.credential(auth.currentUser.email, atual)); }
+      catch (e) {
+        if (e.code === "auth/too-many-requests") throw new Error("Muitas tentativas seguidas. Espere alguns minutos e tente de novo.");
+        throw new Error("A senha atual não confere.");
+      }
+    }
+    await updatePassword(auth.currentUser, nova);
+  }
   catch (e) {
+    if (!e.code) throw e;
     if (e.code === "auth/requires-recent-login") throw new Error("Por segurança, saia e entre de novo antes de trocar a senha.");
     if (e.code === "auth/weak-password") throw new Error("Essa senha é fraca demais. Use pelo menos 6 caracteres.");
     throw new Error("Não foi possível trocar a senha agora. Tente de novo.");

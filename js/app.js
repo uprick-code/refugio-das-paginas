@@ -73,17 +73,39 @@ $("#formLogin").addEventListener("submit", async (e) => {
 $("#btnSair").addEventListener("click", () => signOut(auth));
 $("#btnSairMenu").addEventListener("click", () => signOut(auth));
 
+// Troca de senha: obrigatória no primeiro acesso, ou quando a leitora quiser (menu "Trocar senha").
+let senhaVoluntaria = false;
+function abrirTrocaSenha(voluntaria) {
+  senhaVoluntaria = voluntaria;
+  $("#tituloSenha").textContent = voluntaria ? "Trocar senha" : "Crie sua senha";
+  $("#textoSenha").textContent = voluntaria
+    ? "Digite a senha que você usa hoje e escolha a nova, com pelo menos 6 caracteres."
+    : "Você entrou com uma senha provisória. Escolha uma senha só sua, com pelo menos 6 caracteres.";
+  $("#campoAtual").hidden = !voluntaria; $("#senhaAtual").required = voluntaria;
+  $("#btnCancelarSenha").hidden = !voluntaria;
+  $("#senhaErro").textContent = ""; $("#senhaOk").textContent = "";
+  $("#formSenha").reset();
+  $("#modalSenha").hidden = false;
+  setTimeout(() => (voluntaria ? $("#senhaAtual") : $("#senhaNova")).focus(), 50);
+}
+function fecharTrocaSenha() { $("#modalSenha").hidden = true; $("#formSenha").reset(); }
+document.querySelectorAll("[data-trocar-senha]").forEach(b => b.addEventListener("click", () => { fecharMenu(); abrirTrocaSenha(true); }));
+$("#btnCancelarSenha").addEventListener("click", fecharTrocaSenha);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && senhaVoluntaria && !$("#modalSenha").hidden) fecharTrocaSenha(); });
 $("#formSenha").addEventListener("submit", async (e) => {
   e.preventDefault();
   const a = $("#senhaNova").value, b = $("#senhaConf").value;
-  $("#senhaErro").textContent = "";
+  $("#senhaErro").textContent = ""; $("#senhaOk").textContent = "";
   if (a !== b) { $("#senhaErro").textContent = "As duas senhas não são iguais."; return; }
+  const btn = e.target.querySelector("button[type=submit]"); btn.disabled = true;
   try {
-    await trocarSenha(a);
-    await updateDoc(doc(db, "membros", estado.usuario), { trocarSenha: false });
-    $("#modalSenha").hidden = true;
-    $("#senhaNova").value = $("#senhaConf").value = "";
+    await trocarSenha(a, senhaVoluntaria ? $("#senhaAtual").value : undefined);
+    if (!senhaVoluntaria) await updateDoc(doc(db, "membros", estado.usuario), { trocarSenha: false });
+    $("#formSenha").reset();
+    if (senhaVoluntaria) { $("#senhaOk").textContent = "Senha trocada! Use a nova no próximo acesso."; setTimeout(fecharTrocaSenha, 1800); }
+    else $("#modalSenha").hidden = true;
   } catch (err) { $("#senhaErro").textContent = err.message; }
+  finally { btn.disabled = false; }
 });
 
 function pararTudo() {
@@ -119,8 +141,7 @@ onAuthStateChanged(auth, async (user) => {
     $("#nomeMenu").textContent = m.nome;
     $("#saudacao").textContent = `Que bom te ver por aqui, ${m.nome}.`;
     $("#linkPainel").hidden = !admin;
-    $("#modalSenha").hidden = !m.trocarSenha;
-    if (m.trocarSenha) setTimeout(() => $("#senhaNova").focus(), 50);
+    if (m.trocarSenha) abrirTrocaSenha(false); else $("#modalSenha").hidden = true;
     mostrar("app");
     ouvir();
   } catch (err) {
