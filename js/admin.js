@@ -20,7 +20,7 @@ $("#btnSair").addEventListener("click", () => signOut(auth).then(() => location.
 const appCadastro = initializeApp(firebaseConfig, "cadastro");
 const authCadastro = initializeAuth(appCadastro, { persistence: inMemoryPersistence });
 
-const S = { especiais: [], editEsp: null, fotoNova: null, tirarFoto: false, membros: [], encontros: [], livros: [], clube: {}, editEnc: null, editLivro: null, placarVisivel: false, contagem: null };
+const S = { backup: {}, especiais: [], editEsp: null, fotoNova: null, tirarFoto: false, membros: [], encontros: [], livros: [], clube: {}, editEnc: null, editLivro: null, placarVisivel: false, contagem: null };
 const livroPorId = (id) => S.livros.find(l => l.id === id);
 const SITE = new URL("./", location.href).href;
 
@@ -61,6 +61,7 @@ function iniciar() {
     S.especiais = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
     renderEspeciais();
   }, falha);
+  onSnapshot(doc(db, "config", "backup"), s => { S.backup = s.exists() ? s.data() : {}; renderBackup(); }, falha);
   onSnapshot(doc(db, "config", "clube"), s => { S.clube = s.exists() ? s.data() : {}; renderVotacao(); }, falha);
   $("#lSenha").value = gerarSenha();
 }
@@ -527,5 +528,72 @@ $("#tEsp").addEventListener("click", async (ev) => {
       await deleteDoc(doc(db, "especiais", id));
       if (tinhaFoto) await deleteDoc(doc(db, "capas", "esp_" + id)).catch(() => {});
     } catch (err) { console.error(err); }
+  }
+});
+
+/* ---------------- cópia de segurança ---------------- */
+function renderBackup() {
+  const ult = S.backup?.ultimo;
+  const dias = ult ? Math.floor((Date.now() - ult) / 864e5) : null;
+  const quando = ult ? new Date(ult).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" }) : null;
+  $("#backupInfo").textContent = !ult
+    ? "Nenhuma cópia baixada ainda. Baixe uma agora e guarde o arquivo no computador ou no Google Drive."
+    : dias > 35
+      ? `A última cópia foi baixada em ${quando}, há ${dias} dias. Vale baixar uma nova.`
+      : `Última cópia baixada em ${quando}. Sugestão: baixar uma por mês, depois de cada encontro.`;
+  $("#backupBox").classList.toggle("atrasado", !ult || dias > 35);
+}
+// Converte datas do Firestore para texto legível no arquivo.
+function limpo(v) {
+  if (v && typeof v.toDate === "function") return v.toDate().toISOString();
+  if (Array.isArray(v)) return v.map(limpo);
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, limpo(x)]));
+  return v;
+}
+async function lerColecao(...caminho) {
+  const s = await getDocs(collection(db, ...caminho));
+  return Object.fromEntries(s.docs.map(d => [d.id, limpo(d.data())]));
+}
+$("#btnBackup").addEventListener("click", async () => {
+  const btn = $("#btnBackup"); btn.disabled = true; btn.textContent = "Preparando…";
+  try {
+    const dados = {
+      membros: await lerColecao("membros"),
+      logins: {},
+      livros: await lerColecao("livros"),
+      notas: {},
+      encontros: await lerColecao("encontros"),
+      presencas: {},
+      especiais: await lerColecao("especiais"),
+      capas: await lerColecao("capas"),
+      config: await lerColecao("config"),
+      votos: {}
+    };
+    for (const u of Object.keys(dados.membros)) {
+      const l = await getDoc(doc(db, "logins", u)); if (l.exists()) dados.logins[u] = l.data();
+    }
+    for (const id of Object.keys(dados.livros)) {
+      const n = await lerColecao("livros", id, "notas"); if (Object.keys(n).length) dados.notas[id] = n;
+    }
+    for (const id of Object.keys(dados.encontros)) {
+      const p = await lerColecao("encontros", id, "presencas"); if (Object.keys(p).length) dados.presencas[id] = p;
+    }
+    const rodada = dados.config.clube?.votacao?.rodada;
+    if (rodada) dados.votos[rodada] = await lerColecao("votos", rodada, "v");
+    const arquivo = { clube: "Refúgio das Páginas", versao: 1, exportadoEm: new Date().toISOString(), dados };
+    const hoje = new Date();
+    const nome = `refugio-das-paginas-copia-${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}.json`;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(arquivo, null, 1)], { type: "application/json" }));
+    const a = document.createElement("a"); a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    await setDoc(doc(db, "config", "backup"), { ultimo: Date.now() });
+    btn.textContent = "Cópia baixada";
+  } catch (err) {
+    console.error(err);
+    $("#backupInfo").textContent = "Não foi possível gerar a cópia. Confira a internet e tente de novo.";
+    btn.textContent = "Baixar cópia de segurança";
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = "Baixar cópia de segurança"; }, 4000);
   }
 });

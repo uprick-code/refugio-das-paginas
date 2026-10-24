@@ -31,6 +31,10 @@ As leitoras entram com **usuário + senha**. Por baixo, o Firebase usa um e-mail
 
 Páginas sobre uma autora, um autor ou um tema, criadas pela Taís no painel (aba **Especiais**): foto, frase de abertura, "quem é", linha do tempo (uma linha por acontecimento, `ano — texto`), livros do acervo, curiosidades e links (`nome | https://…`). Ficam como rascunho até serem marcadas como publicadas. Dados na coleção `especiais`; a foto vai para `capas/esp_<id>`.
 
+## Cópia de segurança
+
+No topo do painel, o botão **Baixar cópia de segurança** gera um arquivo `.json` com todos os dados do clube (leitoras, acervo, capas enviadas, encontros, presenças, comentários, especiais, configuração e os votos da votação atual). Senhas não entram: ficam só no Firebase Authentication. O painel avisa quando a última cópia tem mais de 35 dias. Guarde os arquivos num lugar privado.
+
 ## Administradoras
 
 A lista fica em dois lugares, que precisam bater: `ADMINS` em `js/firebase.js` e `isAdmin()` em `firestore.rules`.

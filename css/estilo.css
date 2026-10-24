@@ -286,3 +286,8 @@ img.capa-db{background:var(--paper-2)}
 .curios{margin:0;padding-left:20px;display:grid;gap:8px;max-width:66ch}
 .curios li::marker{color:var(--rose-ink)}
 .esp-links{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+
+/* cópia de segurança */
+.backup{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;border:1px solid var(--line);background:var(--card);padding:14px 18px}
+.backup > div{min-width:0;flex:1 1 260px;display:grid;gap:2px}
+.backup.atrasado{border-color:var(--rose-ink);background:var(--rose-soft)}
