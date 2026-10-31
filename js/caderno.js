@@ -186,7 +186,8 @@ async function abrirCaderno(e) {
     : `<div class="campo-titulo"><span class="campo-pre">${esc(e.titulo || "")}</span><span class="fita-kraft"></span><span class="campo-autor">${esc(nomeGrande)}</span></div>`;
   const citacao = e.chamada ? `<figure class="cad-citacao"><blockquote>${esc(e.chamada)}</blockquote>${e.citacaoAutor ? `<figcaption>— ${esc(e.citacaoAutor)}</figcaption>` : ""}</figure>` : "";
   v.innerHTML = `<div class="wrap esp-artigo cad">
-    <button class="btn mini" type="button" id="cadFechar">← Voltar ao site</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn mini" type="button" id="cadFechar">← Voltar ao site</button>
+      <button class="btn mini" type="button" id="cadLinkCad">Copiar link do caderno</button></div>
     <section class="cad-abertura" aria-label="Abertura do caderno"><div class="cad-folha">
       ${etiquetas}
       <div class="cad-ilus-abertura">${abertura}</div>
@@ -208,6 +209,7 @@ async function abrirCaderno(e) {
   if (novo) v.scrollTop = 0;
   pintarCapas(v);
   $("#cadFechar").addEventListener("click", () => { location.hash = "especiais"; });
+  $("#cadLinkCad").addEventListener("click", (ev) => copiarLink(ev.currentTarget, "#cad-" + e.id, "Copiar link do caderno"));
   $("#cadVerColecao").addEventListener("click", (ev) => { ev.preventDefault(); $("#cadColecao").scrollIntoView({ behavior: "smooth" }); });
   v.querySelector(".cad-grade").addEventListener("click", (ev) => {
     const b = ev.target.closest("[data-cadlivro]"); if (!b) return;
@@ -230,6 +232,14 @@ function pintarCapas(raiz) {
   raiz.querySelectorAll("canvas[data-cadcapa]").forEach(c => {
     const l = C.livros.find(x => x.id === c.dataset.cadcapa); if (l) desenharCapa(c, l, temaDe(C.caderno), C.caderno?.autor);
   });
+}
+
+// Link direto para mandar no WhatsApp: abre o site já no caderno ou no livro (depois do login).
+async function copiarLink(botao, hash, rotulo) {
+  const url = location.origin + location.pathname + hash;
+  try { await navigator.clipboard.writeText(url); botao.textContent = "Link copiado! Cole no WhatsApp"; }
+  catch (e) { botao.textContent = url; }
+  setTimeout(() => { botao.textContent = rotulo; }, 2500);
 }
 
 /* ================= ficha ================= */
@@ -266,7 +276,9 @@ function abrirFicha(id, rolar) {
     </div>
     <div class="nav-ficha">
       <button class="btn mini" type="button" id="cadAnt" ${i === 0 ? "disabled" : ""}>‹ Livro anterior</button>
-      <button class="btn mini solid" type="button" id="cadShareLivro">Compartilhar este livro</button>
+      <span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        <button class="btn mini solid" type="button" id="cadShareLivro">Compartilhar este livro</button>
+        <button class="btn mini" type="button" id="cadLinkLivro">Copiar link deste livro</button></span>
       <button class="btn mini" type="button" id="cadProx" ${i === C.livros.length - 1 ? "disabled" : ""}>Próximo livro ›</button>
     </div>
     <div class="reflexoes">
@@ -283,6 +295,7 @@ function abrirFicha(id, rolar) {
   $("#cadAnt").addEventListener("click", () => irPara(i - 1));
   $("#cadProx").addEventListener("click", () => irPara(i + 1));
   $("#cadShareLivro").addEventListener("click", () => abrirShare(null));
+  $("#cadLinkLivro").addEventListener("click", (ev) => copiarLink(ev.currentTarget, "#cadl-" + l.id, "Copiar link deste livro"));
   $("#cadFormRef").addEventListener("submit", enviarReflexao);
   $("#cadListaRef").addEventListener("click", cliqueReflexao);
   C.subRef && C.subRef();
