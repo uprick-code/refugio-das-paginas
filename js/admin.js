@@ -1,14 +1,15 @@
 // Painel da Taís: leitoras, encontros, votação e acervo.
 import {
   auth, db, firebaseConfig, onAuthStateChanged, signOut, esc, emailDe, usuarioDoEmail, isAdminEmail,
-  normalizaUsuario, dataCurta, hojeISO, capaHTML, ligarTema, ADMINS, prepararCapa, guardarCapaNoCache
+  normalizaUsuario, dataCurta, hojeISO, capaHTML, ligarTema, ADMINS, prepararCapa, guardarCapaNoCache,
+  prepararFoto, tamanhoLegivel
 } from "./firebase.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { initializeAuth, inMemoryPersistence, createUserWithEmailAndPassword, signOut as sairDe }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {
   doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, collection, onSnapshot, query, orderBy,
-  serverTimestamp, writeBatch
+  serverTimestamp, writeBatch, where, increment
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { ACERVO_INICIAL } from "./acervo-inicial.js";
 
@@ -20,7 +21,7 @@ $("#btnSair").addEventListener("click", () => signOut(auth).then(() => location.
 const appCadastro = initializeApp(firebaseConfig, "cadastro");
 const authCadastro = initializeAuth(appCadastro, { persistence: inMemoryPersistence });
 
-const S = { backup: {}, especiais: [], editEsp: null, fotoNova: null, tirarFoto: false, membros: [], encontros: [], livros: [], clube: {}, editEnc: null, editLivro: null, placarVisivel: false, contagem: null };
+const S = { espaco: {}, regEnc: null, registro: null, regFotos: [], subReg: [], backup: {}, especiais: [], editEsp: null, fotoNova: null, tirarFoto: false, membros: [], encontros: [], livros: [], clube: {}, editEnc: null, editLivro: null, placarVisivel: false, contagem: null };
 const livroPorId = (id) => S.livros.find(l => l.id === id);
 const SITE = new URL("./", location.href).href;
 
@@ -61,6 +62,7 @@ function iniciar() {
     S.especiais = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
     renderEspeciais();
   }, falha);
+  onSnapshot(doc(db, "config", "armazenamento"), s => { S.espaco = s.exists() ? s.data() : {}; renderEspaco(); }, falha);
   onSnapshot(doc(db, "config", "backup"), s => { S.backup = s.exists() ? s.data() : {}; renderBackup(); }, falha);
   onSnapshot(doc(db, "config", "clube"), s => { S.clube = s.exists() ? s.data() : {}; renderVotacao(); }, falha);
   $("#lSenha").value = gerarSenha();
@@ -195,7 +197,8 @@ function renderEncontros() {
     return `<tr${e.data < h ? ' style="opacity:.65"' : ""}><td style="white-space:nowrap">${dataCurta(e.data)} ${e.data.slice(0, 4)}<br><span class="small">${esc(e.hora || "")}</span></td>
       <td>${esc(e.local || "—")}</td><td>${l ? esc(l.titulo) : '<span class="small">—</span>'}</td>
       <td><button class="btn mini" type="button" data-pres="${esc(e.id)}">Ver</button></td>
-      <td><div class="acoes"><button class="btn mini" type="button" data-editenc="${esc(e.id)}">Editar</button>
+      <td><div class="acoes"><button class="btn mini" type="button" data-registro="${esc(e.id)}">Registro</button>
+        <button class="btn mini" type="button" data-editenc="${esc(e.id)}">Editar</button>
         <button class="btn mini perigo" type="button" data-apagaenc="${esc(e.id)}">Apagar</button></div></td></tr>`;
   }).join("") : `<tr><td colspan="5" class="vazio">Nenhum encontro marcado. Se ainda não importou o acervo, a aba Acervo cria o 1º encontro junto.</td></tr>`;
 }
@@ -213,9 +216,18 @@ $("#tEncontros").addEventListener("click", async (ev) => {
   const ap = ev.target.closest("[data-apagaenc]");
   if (ap) {
     if (ap.dataset.confirma !== "1") { ap.dataset.confirma = "1"; ap.textContent = "Confirmar?"; return; }
-    try { await deleteDoc(doc(db, "encontros", ap.dataset.apagaenc)); } catch (err) { console.error(err); }
+    try {
+      const id = ap.dataset.apagaenc;
+      const fs = await getDocs(query(collection(db, "fotos"), where("encontro", "==", id)));
+      for (const f of fs.docs) await apagarFoto(f.id, f.data().bytes || 0);
+      await deleteDoc(doc(db, "registros", id)).catch(() => {});
+      await deleteDoc(doc(db, "encontros", id));
+      if (S.regEnc === id) fecharRegistro();
+    } catch (err) { console.error(err); }
     return;
   }
+  const rg = ev.target.closest("[data-registro]");
+  if (rg) { abrirRegistro(rg.dataset.registro); return; }
   const pr = ev.target.closest("[data-pres]");
   if (pr) {
     const e = S.encontros.find(x => x.id === pr.dataset.pres);
@@ -567,8 +579,12 @@ $("#btnBackup").addEventListener("click", async () => {
       especiais: await lerColecao("especiais"),
       capas: await lerColecao("capas"),
       config: await lerColecao("config"),
+      registros: await lerColecao("registros"),
+      fotos: {},
       votos: {}
     };
+    // Só a lista das fotos (encontro, legenda, ordem); as imagens vão na "Cópia das fotos".
+    for (const [id, f] of Object.entries(await lerColecao("fotos"))) { const { mini, ...resto } = f; dados.fotos[id] = resto; }
     for (const u of Object.keys(dados.membros)) {
       const l = await getDoc(doc(db, "logins", u)); if (l.exists()) dados.logins[u] = l.data();
     }
@@ -582,7 +598,7 @@ $("#btnBackup").addEventListener("click", async () => {
     if (rodada) dados.votos[rodada] = await lerColecao("votos", rodada, "v");
     const arquivo = { clube: "Refúgio das Páginas", versao: 1, exportadoEm: new Date().toISOString(), dados };
     const hoje = new Date();
-    const nome = `refugio-das-paginas-copia-${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}.json`;
+    const nome = `refugio-das-paginas-dados-${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}.json`;
     const url = URL.createObjectURL(new Blob([JSON.stringify(arquivo, null, 1)], { type: "application/json" }));
     const a = document.createElement("a"); a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
@@ -591,9 +607,220 @@ $("#btnBackup").addEventListener("click", async () => {
   } catch (err) {
     console.error(err);
     $("#backupInfo").textContent = "Não foi possível gerar a cópia. Confira a internet e tente de novo.";
-    btn.textContent = "Baixar cópia de segurança";
+    btn.textContent = "Cópia dos dados";
   } finally {
     btn.disabled = false;
-    setTimeout(() => { btn.textContent = "Baixar cópia de segurança"; }, 4000);
+    setTimeout(() => { btn.textContent = "Cópia dos dados"; }, 4000);
   }
 });
+
+/* ---------------- registro dos encontros ---------------- */
+const MAX_FOTOS = 24, COTA = 1024 * 1024 * 1024;
+function renderEspaco() {
+  const b = S.espaco.bytes || 0, n = S.espaco.fotos || 0;
+  const pct = Math.min(100, b / COTA * 100);
+  const txt = n ? `Fotos dos encontros: ${n} foto${n === 1 ? "" : "s"}, cerca de ${tamanhoLegivel(b)} usados de 1 GB grátis (${pct < 1 ? "menos de 1" : Math.round(pct)}%).`
+    : "Fotos dos encontros: nenhuma enviada ainda. O espaço grátis é de 1 GB, o bastante para uns 10 anos de encontros.";
+  $("#espacoInfo").textContent = txt;
+  const r = $("#regEspaco"); if (r) r.textContent = txt;
+}
+function fecharRegistro() {
+  S.subReg.forEach(u => u()); S.subReg = []; S.regEnc = null; S.registro = null; S.regFotos = [];
+  $("#registroCaixa").hidden = true; $("#registroCaixa").innerHTML = "";
+}
+function abrirRegistro(id) {
+  fecharRegistro();
+  const e = S.encontros.find(x => x.id === id); if (!e) return;
+  S.regEnc = id;
+  const c = $("#registroCaixa");
+  c.innerHTML = `
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap">
+      <h3>Registro · ${esc(dataCurta(e.data))} ${e.data.slice(0, 4)}</h3>
+      <button class="btn mini" type="button" id="btnFecharReg">Fechar</button>
+    </div>
+    <form id="formReg" autocomplete="off">
+      <div class="field"><label for="rTexto">Apresentação do encontro</label>
+        <textarea id="rTexto" rows="6" maxlength="6000" placeholder="Como foi o encontro, o que mais rendeu na conversa… Um parágrafo por linha."></textarea></div>
+      <div class="field"><label for="rFrase">Frase da noite (opcional)</label><input type="text" id="rFrase" maxlength="240" placeholder="Uma frase do livro ou de alguém do grupo"></div>
+      <div class="linha">
+        <div class="field"><label for="rNota">Nota média do grupo</label><input type="text" inputmode="decimal" id="rNota" maxlength="3" placeholder="4,5"></div>
+        <div class="checks" style="align-content:end"><label><input type="checkbox" id="rPub"> Publicado</label></div>
+      </div>
+      <button class="btn solid" type="submit" style="justify-self:start">Salvar registro</button>
+      <p class="erro" id="regErro" role="alert"></p><p class="ok" id="regOk" role="status"></p>
+    </form>
+    <div style="display:grid;gap:10px;border-top:1px dashed var(--line);padding-top:16px">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+        <span class="label" id="regContagem">Fotos</span>
+        <span style="display:flex;gap:8px;flex-wrap:wrap">
+          <input type="file" id="rArquivos" accept="image/*" multiple class="visually-hidden">
+          <label for="rArquivos" class="btn mini solid" id="lblEnviarFotos">Enviar fotos</label>
+          <button class="btn mini" type="button" id="btnZipEnc">Baixar fotos (.zip)</button>
+        </span>
+      </div>
+      <p class="small" id="fotoProg" role="status"></p>
+      <div class="reg-fotos" id="regFotos"></div>
+      <p class="small" id="regEspaco"></p>
+    </div>`;
+  c.hidden = false;
+  renderEspaco();
+  c.scrollIntoView({ behavior: "smooth", block: "start" });
+  $("#btnFecharReg").addEventListener("click", fecharRegistro);
+  $("#formReg").addEventListener("submit", salvarRegistro);
+  $("#rArquivos").addEventListener("change", (ev) => { const a = [...ev.target.files]; ev.target.value = ""; enviarFotos(a); });
+  $("#btnZipEnc").addEventListener("click", (ev) => baixarFotosZip([id], ev.currentTarget));
+  $("#regFotos").addEventListener("click", cliqueFoto);
+  $("#regFotos").addEventListener("change", async (ev) => {
+    const i = ev.target.closest("[data-legenda]"); if (!i) return;
+    try { await updateDoc(doc(db, "fotos", i.dataset.legenda), { legenda: i.value.trim().slice(0, 200) }); } catch (err) { console.error(err); }
+  });
+  let primeiro = true;
+  S.subReg.push(onSnapshot(doc(db, "registros", id), s => {
+    S.registro = s.exists() ? s.data() : {};
+    if (primeiro) {
+      primeiro = false;
+      $("#rTexto").value = S.registro.texto || ""; $("#rFrase").value = S.registro.frase || "";
+      $("#rNota").value = S.registro.nota != null ? String(S.registro.nota).replace(".", ",") : "";
+      $("#rPub").checked = !!S.registro.publicado;
+    }
+    renderFotosReg();
+  }, err => console.error(err)));
+  S.subReg.push(onSnapshot(query(collection(db, "fotos"), where("encontro", "==", id)), s => {
+    S.regFotos = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+    renderFotosReg();
+  }, err => console.error(err)));
+}
+async function salvarRegistro(ev) {
+  ev.preventDefault();
+  $("#regErro").textContent = ""; $("#regOk").textContent = "";
+  const notaTxt = $("#rNota").value.trim().replace(",", ".");
+  const nota = notaTxt ? Number(notaTxt) : null;
+  if (nota !== null && (isNaN(nota) || nota < 0 || nota > 5)) { $("#regErro").textContent = "A nota precisa ser um número de 0 a 5, como 4,5."; return; }
+  try {
+    await setDoc(doc(db, "registros", S.regEnc), {
+      texto: $("#rTexto").value.trim(), frase: $("#rFrase").value.trim(), nota: nota === null ? null : Math.round(nota * 10) / 10,
+      publicado: $("#rPub").checked, atualizadoEm: Date.now()
+    }, { merge: true });
+    $("#regOk").textContent = $("#rPub").checked ? "Registro salvo e publicado para as leitoras." : "Registro salvo como rascunho.";
+  } catch (err) { console.error(err); $("#regErro").textContent = "Não foi possível salvar. Confira se as regras novas já foram publicadas no Firebase."; }
+}
+function renderFotosReg() {
+  const g = $("#regFotos"); if (!g) return;
+  const capa = S.registro?.capa;
+  const n = S.regFotos.length;
+  $("#regContagem").textContent = `Fotos (${n} de ${MAX_FOTOS})`;
+  if (n >= MAX_FOTOS) $("#lblEnviarFotos").setAttribute("aria-disabled", "true");
+  else if (!$("#fotoProg").textContent.startsWith("Preparando")) $("#lblEnviarFotos").removeAttribute("aria-disabled");
+  // Mantém o que a Taís está digitando numa legenda.
+  const foco = document.activeElement?.dataset?.legenda, valor = foco ? document.activeElement.value : null;
+  g.innerHTML = n ? S.regFotos.map(f => `<figure class="reg-foto ${f.id === capa ? "capa" : ""}">
+      <img src="${f.mini}" alt="">
+      <input type="text" data-legenda="${esc(f.id)}" value="${esc(f.legenda || "")}" maxlength="200" placeholder="Legenda" aria-label="Legenda da foto">
+      <div class="reg-acoes">
+        <button class="btn mini" type="button" data-capa="${esc(f.id)}" aria-pressed="${f.id === capa}">${f.id === capa ? "★ Capa" : "☆ Capa"}</button>
+        <button class="btn mini perigo" type="button" data-apagafoto="${esc(f.id)}">Apagar</button>
+      </div></figure>`).join("")
+    : `<p class="vazio">Nenhuma foto ainda. Toque em "Enviar fotos" e escolha várias de uma vez na galeria.</p>`;
+  if (foco) { const i = g.querySelector(`[data-legenda="${CSS.escape(foco)}"]`); if (i) { i.value = valor; i.focus(); } }
+}
+async function cliqueFoto(ev) {
+  const cp = ev.target.closest("[data-capa]");
+  if (cp) { try { await setDoc(doc(db, "registros", S.regEnc), { capa: cp.dataset.capa }, { merge: true }); } catch (err) { console.error(err); } return; }
+  const ap = ev.target.closest("[data-apagafoto]");
+  if (ap) {
+    if (ap.dataset.confirma !== "1") { ap.dataset.confirma = "1"; ap.textContent = "Confirmar?"; return; }
+    const f = S.regFotos.find(x => x.id === ap.dataset.apagafoto); if (!f) return;
+    ap.disabled = true;
+    try {
+      await apagarFoto(f.id, f.bytes || 0);
+      if (S.registro?.capa === f.id) {
+        const outra = S.regFotos.find(x => x.id !== f.id);
+        await setDoc(doc(db, "registros", S.regEnc), { capa: outra ? outra.id : null }, { merge: true });
+      }
+    } catch (err) { console.error(err); ap.disabled = false; }
+  }
+}
+async function apagarFoto(id, bytes) {
+  await deleteDoc(doc(db, "fotos", id));
+  await deleteDoc(doc(db, "fotosGrandes", id)).catch(() => {});
+  await setDoc(doc(db, "config", "armazenamento"), { bytes: increment(-bytes), fotos: increment(-1) }, { merge: true });
+}
+async function enviarFotos(arquivos) {
+  const enc = S.regEnc; if (!enc || !arquivos.length) return;
+  const vagas = MAX_FOTOS - S.regFotos.length;
+  const prog = $("#fotoProg");
+  if (vagas <= 0) { prog.textContent = `Este encontro já tem ${MAX_FOTOS} fotos. Apague alguma para enviar outras.`; return; }
+  const lote = arquivos.slice(0, vagas);
+  const avisos = [];
+  if (arquivos.length > vagas) avisos.push(`Só cabiam mais ${vagas}; ${arquivos.length - vagas} foto${arquivos.length - vagas === 1 ? " ficou" : "s ficaram"} de fora.`);
+  $("#lblEnviarFotos").setAttribute("aria-disabled", "true");
+  let ok = 0, ordem = Date.now();
+  for (let i = 0; i < lote.length; i++) {
+    if (S.regEnc !== enc) break;
+    prog.textContent = `Preparando e enviando ${i + 1} de ${lote.length}… Não feche esta página.`;
+    try {
+      const f = await prepararFoto(lote[i]);
+      const id = doc(collection(db, "fotos")).id;
+      const bytes = f.grande.length + f.mini.length;
+      await setDoc(doc(db, "fotosGrandes", id), { img: f.grande });
+      await setDoc(doc(db, "fotos", id), { encontro: enc, mini: f.mini, legenda: "", ordem: ordem + i, bytes });
+      await setDoc(doc(db, "config", "armazenamento"), { bytes: increment(bytes), fotos: increment(1) }, { merge: true });
+      if (!S.registro?.capa && ok === 0) await setDoc(doc(db, "registros", enc), { capa: id }, { merge: true });
+      ok++;
+    } catch (err) {
+      console.error(err);
+      avisos.push(err.message && !err.code ? err.message : `"${lote[i].name}" não foi enviada. Confira a internet e as regras do Firebase.`);
+    }
+  }
+  $("#lblEnviarFotos").removeAttribute("aria-disabled");
+  prog.textContent = `${ok} foto${ok === 1 ? " enviada" : "s enviadas"}.` + (avisos.length ? " " + avisos.join(" ") : "");
+}
+
+// ZIP com as fotos em tamanho grande, uma pasta por encontro, mais as legendas.
+let jszip = null;
+function carregarJSZip() {
+  if (window.JSZip) return Promise.resolve(window.JSZip);
+  if (!jszip) jszip = new Promise((ok, falha) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+    s.onload = () => ok(window.JSZip); s.onerror = () => { jszip = null; falha(new Error("zip")); };
+    document.head.appendChild(s);
+  });
+  return jszip;
+}
+async function baixarFotosZip(encontroIds, botao) {
+  const rotulo = botao.textContent; botao.disabled = true; botao.textContent = "Preparando…";
+  try {
+    const JSZip = await carregarJSZip();
+    const zip = new JSZip(); let total = 0;
+    for (const id of encontroIds) {
+      const e = S.encontros.find(x => x.id === id);
+      const pasta = zip.folder(e ? e.data : id);
+      const fs = (await getDocs(query(collection(db, "fotos"), where("encontro", "==", id)))).docs
+        .map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+      const legendas = [];
+      for (let i = 0; i < fs.length; i++) {
+        botao.textContent = `Baixando ${++total}…`;
+        const g = await getDoc(doc(db, "fotosGrandes", fs[i].id));
+        const dado = g.exists() ? g.data().img : fs[i].mini;
+        const nome = `${String(i + 1).padStart(2, "0")}.jpg`;
+        pasta.file(nome, dado.split(",")[1], { base64: true });
+        if (fs[i].legenda) legendas.push(`${nome}: ${fs[i].legenda}`);
+      }
+      if (legendas.length) pasta.file("legendas.txt", legendas.join("\n"));
+    }
+    if (!total) { botao.textContent = "Nenhuma foto"; return; }
+    const blob = await zip.generateAsync({ type: "blob" });
+    const hoje = hojeISO();
+    const nome = encontroIds.length === 1 ? `refugio-fotos-${S.encontros.find(x => x.id === encontroIds[0])?.data || hoje}.zip` : `refugio-das-paginas-fotos-${hoje}.zip`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    botao.textContent = "Baixado";
+  } catch (err) {
+    console.error(err); botao.textContent = "Não foi possível baixar";
+  } finally {
+    botao.disabled = false; setTimeout(() => { botao.textContent = rotulo; }, 3500);
+  }
+}
+$("#btnBackupFotos").addEventListener("click", (ev) => baixarFotosZip(S.encontros.map(e => e.id), ev.currentTarget));

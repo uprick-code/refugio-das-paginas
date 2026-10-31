@@ -75,6 +75,31 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Registro dos encontros: apresentação, frase e nota. As leitoras só veem os publicados.
+    match /registros/{id} {
+      allow read: if isAdmin() || (isMember() && resource.data.publicado == true);
+      allow write: if isAdmin();
+    }
+
+    // Fotos dos encontros: miniatura (galeria) e versão grande (ao ampliar), reduzidas no navegador.
+    match /fotos/{id} {
+      allow read: if isMember();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['encontro', 'mini', 'legenda', 'ordem', 'bytes'])
+        && request.resource.data.mini is string
+        && request.resource.data.mini.size() < 100000
+        && request.resource.data.legenda.size() <= 200;
+      allow delete: if isAdmin();
+    }
+    match /fotosGrandes/{id} {
+      allow read: if isMember();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['img'])
+        && request.resource.data.img is string
+        && request.resource.data.img.size() < 600000;
+      allow delete: if isAdmin();
+    }
+
     match /encontros/{id} {
       allow read: if isMember();
       allow write: if isAdmin();

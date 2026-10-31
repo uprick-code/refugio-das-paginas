@@ -31,9 +31,13 @@ As leitoras entram com **usuário + senha**. Por baixo, o Firebase usa um e-mail
 
 Páginas sobre uma autora, um autor ou um tema, criadas pela Taís no painel (aba **Especiais**): foto, frase de abertura, "quem é", linha do tempo (uma linha por acontecimento, `ano — texto`), livros do acervo, curiosidades e links (`nome | https://…`). Ficam como rascunho até serem marcadas como publicadas. Dados na coleção `especiais`; a foto vai para `capas/esp_<id>`.
 
+## Registro dos encontros (Memórias)
+
+No painel, **Encontros → Registro** abre o registro de um encontro: apresentação (um parágrafo por linha), frase da noite, nota média e até **24 fotos**, enviadas de uma vez pela galeria do celular. Cada foto é reduzida no navegador em duas versões: uma miniatura (até 480 px, ~30–60 KB) na coleção `fotos` e uma versão grande (até 1600 px, até ~350 KB) na coleção `fotosGrandes`, carregada só quando alguém amplia a foto. O total usado fica em `config/armazenamento` e aparece no topo do painel. Registros marcados como **Publicado** aparecem para as leitoras na seção **Nossos encontros** (menu **Memórias**). Apagar um encontro apaga também o registro e as fotos dele.
+
 ## Cópia de segurança
 
-No topo do painel, o botão **Baixar cópia de segurança** gera um arquivo `.json` com todos os dados do clube (leitoras, acervo, capas enviadas, encontros, presenças, comentários, especiais, configuração e os votos da votação atual). Senhas não entram: ficam só no Firebase Authentication. O painel avisa quando a última cópia tem mais de 35 dias. Guarde os arquivos num lugar privado.
+No topo do painel há dois botões. **Cópia dos dados** gera um arquivo `.json` leve com os dados do clube (leitoras, acervo, capas enviadas, encontros, presenças, comentários, especiais, registros, a lista das fotos, configuração e os votos da votação atual). **Cópia das fotos (.zip)** baixa todas as fotos dos encontros em tamanho grande, uma pasta por encontro, com as legendas; no registro de cada encontro também dá para baixar só as fotos dele. Senhas não entram: ficam só no Firebase Authentication. O painel avisa quando a última cópia tem mais de 35 dias. Guarde os arquivos num lugar privado.
 
 ## Administradoras
 

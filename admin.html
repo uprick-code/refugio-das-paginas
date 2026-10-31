@@ -28,7 +28,11 @@
     <div class="backup" id="backupBox">
       <div><span class="label">Cópia de segurança</span>
         <p id="backupInfo" class="small">Baixe uma cópia de todos os dados do clube. Guarde o arquivo no computador ou no Google Drive.</p></div>
-      <button class="btn" type="button" id="btnBackup">Baixar cópia de segurança</button>
+      <div class="backup-botoes">
+        <button class="btn" type="button" id="btnBackup">Cópia dos dados</button>
+        <button class="btn" type="button" id="btnBackupFotos">Cópia das fotos (.zip)</button>
+      </div>
+      <p class="small backup-espaco" id="espacoInfo"></p>
     </div>
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" type="button" data-tab="leitoras" aria-selected="true">Leitoras</button>
@@ -92,6 +96,7 @@
         <div style="display:grid;gap:22px">
           <div class="tabela-wrap"><table><thead><tr><th>Data</th><th>Local</th><th>Livro</th><th>Presenças</th><th></th></tr></thead><tbody id="tEncontros"></tbody></table></div>
           <div class="caixa" id="presencasCaixa" hidden></div>
+          <div class="caixa" id="registroCaixa" hidden></div>
         </div>
       </div>
     </section>

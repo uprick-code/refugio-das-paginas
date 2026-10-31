@@ -153,6 +153,34 @@ export async function prepararCapa(arquivo) {
   } finally { URL.revokeObjectURL(url); }
 }
 
+// Fotos dos encontros: uma versão grande (até 1600 px no lado maior, ~350 KB) para ampliar
+// e uma miniatura (até 480 px, ~60 KB) para a galeria. Os limites cabem com folga numa ficha do Firestore (1 MB).
+function reduzir(imagem, maxLado, limite) {
+  const escala = Math.min(1, maxLado / Math.max(imagem.naturalWidth, imagem.naturalHeight));
+  const w = Math.max(1, Math.round(imagem.naturalWidth * escala)), h = Math.max(1, Math.round(imagem.naturalHeight * escala));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h); ctx.drawImage(imagem, 0, 0, w, h);
+  let q = 0.82, dado = c.toDataURL("image/jpeg", q);
+  while (dado.length > limite && q > 0.35) { q -= 0.08; dado = c.toDataURL("image/jpeg", q); }
+  if (dado.length > limite) throw new Error("grande");
+  return dado;
+}
+export const LIMITE_FOTO = 350000, LIMITE_MINI = 60000;
+export async function prepararFoto(arquivo) {
+  if (!arquivo || !arquivo.type.startsWith("image/")) throw new Error(`"${arquivo?.name || "arquivo"}" não é uma imagem.`);
+  const url = URL.createObjectURL(arquivo);
+  try {
+    const imagem = await new Promise((ok, falha) => { const i = new Image(); i.onload = () => ok(i); i.onerror = falha; i.src = url; });
+    return { grande: reduzir(imagem, 1600, LIMITE_FOTO), mini: reduzir(imagem, 480, LIMITE_MINI), w: imagem.naturalWidth, h: imagem.naturalHeight };
+  } catch (e) {
+    throw new Error(`Não foi possível ler "${arquivo.name}". Use fotos JPG ou PNG (no computador, fotos HEIC do iPhone podem não abrir).`);
+  } finally { URL.revokeObjectURL(url); }
+}
+export function tamanhoLegivel(bytes) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(bytes < 10 * 1024 * 1024 ? 1 : 0).replace(".", ",")} MB`;
+}
+
 export function ligarTema(botao) {
   try { const t = localStorage.getItem("refugio-tema"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
   botao?.addEventListener("click", () => {

@@ -27,6 +27,7 @@
       <a href="#especiais" id="linkEspeciais" hidden>Especiais</a>
       <a href="#calendario">Calendário</a>
       <a href="#estante">Estante</a>
+      <a href="#memorias" id="linkMemorias" hidden>Memórias</a>
       <a href="#como-funciona">Combinados</a>
       <a href="admin.html" id="linkPainel" hidden>Painel da Taís</a>
       <div class="menu-conta"><span id="nomeMenu"></span><span style="display:flex;gap:16px"><button class="linkbtn" type="button" data-trocar-senha>Trocar senha</button><button class="linkbtn" type="button" id="btnSairMenu">Sair</button></span></div>
@@ -119,6 +120,15 @@
     <div class="estante-scroll"><div class="estante"><div class="prateleira" id="prateleira"></div><div class="tabua"></div></div></div>
   </div></section>
 
+  <div id="memoriasBloco" hidden>
+  <div class="washi" aria-hidden="true"></div>
+  <section id="memorias"><div class="wrap">
+    <div class="sec-head"><span class="label">Memórias</span><h2>Nossos encontros</h2>
+      <p>O que vivemos em cada encontro: a conversa, a frase da noite e as fotos.</p></div>
+    <div class="mem-grid" id="memGrid"></div>
+  </div></section>
+  </div>
+
   <div class="washi alt" aria-hidden="true"></div>
 
   <section id="como-funciona"><div class="wrap">
@@ -141,6 +151,18 @@
 
 <!-- LEITURA DE UM ESPECIAL -->
 <div class="esp-view" id="espView" hidden role="dialog" aria-modal="true" aria-labelledby="espTitulo"></div>
+
+<!-- REGISTRO DE UM ENCONTRO -->
+<div class="esp-view" id="regView" hidden role="dialog" aria-modal="true" aria-labelledby="regTitulo"></div>
+
+<!-- FOTO AMPLIADA -->
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Foto ampliada">
+  <button class="lb-fechar" type="button" id="lbFechar" aria-label="Fechar">✕</button>
+  <button class="lb-nav lb-ant" type="button" id="lbAnt" aria-label="Foto anterior">‹</button>
+  <figure><img id="lbImg" alt=""><figcaption id="lbLegenda"></figcaption></figure>
+  <button class="lb-nav lb-prox" type="button" id="lbProx" aria-label="Próxima foto">›</button>
+  <span class="lb-conta" id="lbConta"></span>
+</div>
 
 <!-- TROCA DE SENHA -->
 <div class="modal" id="modalSenha" hidden role="dialog" aria-modal="true" aria-labelledby="tituloSenha">

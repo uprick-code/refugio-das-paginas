@@ -5,7 +5,7 @@ import {
 } from "./firebase.js";
 import { enfeitarRosto, planta } from "./ornamentos.js";
 import {
-  doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, query, orderBy, where, serverTimestamp
+  doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const $ = (s) => document.querySelector(s);
@@ -18,7 +18,7 @@ ligarTema($("#themeBtn"));
 const estado = {
   usuario: null, admin: false,
   membros: {}, livros: [], encontros: [], clube: {},
-  presencas: [], meuVoto: null, notas: [], especiais: [],
+  presencas: [], meuVoto: null, notas: [], especiais: [], registros: [],
   filtro: "todos",
   subs: [], subPresencas: null, subVoto: null, subNotas: null,
   chavePres: null, chaveVoto: null, chaveNotas: null
@@ -109,7 +109,7 @@ $("#formSenha").addEventListener("submit", async (e) => {
 });
 
 function pararTudo() {
-  fecharEspecial(true);
+  fecharEspecial(true); fecharRegistroView(); fecharLightbox();
   estado.subs.forEach(u => u()); estado.subs = [];
   [estado.subPresencas, estado.subVoto, estado.subNotas].forEach(u => u && u());
   estado.subPresencas = estado.subVoto = estado.subNotas = null;
@@ -170,6 +170,9 @@ function ouvir() {
       .sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0));
     render();
   }, falha));
+  estado.subs.push(onSnapshot(query(collection(db, "registros"), where("publicado", "==", true)), s => {
+    estado.registros = s.docs.map(d => ({ id: d.id, ...d.data() })); render();
+  }, falha));
   estado.subs.push(onSnapshot(doc(db, "config", "clube"), s => {
     estado.clube = s.exists() ? s.data() : {}; render();
   }, falha));
@@ -220,7 +223,7 @@ function livroDoMes() {
 function render() {
   if (!estado.usuario) return;
   ajustarInscricoes();
-  renderEncontro(); renderVotacao(); renderLivroMes(); renderAcervo(); renderEspeciais(); renderCalendario(); renderEstante();
+  renderEncontro(); renderVotacao(); renderLivroMes(); renderAcervo(); renderEspeciais(); renderCalendario(); renderEstante(); renderMemorias();
 }
 
 /* ---------------- encontro e presença ---------------- */
@@ -510,7 +513,7 @@ function abrirPeloEndereco() {
   const e = m ? estado.especiais.find(x => x.id === decodeURIComponent(m[1])) : null;
   if (e) abrirEspecial(e); else fecharEspecial(true);
 }
-window.addEventListener("hashchange", () => { if (estado.usuario) abrirPeloEndereco(); });
+window.addEventListener("hashchange", () => { if (estado.usuario) { abrirPeloEndereco(); abrirRegistroPeloEndereco(); } });
 
 function abrirEspecial(e) {
   const v = $("#espView");
@@ -550,3 +553,122 @@ function fecharEspecial(silencioso) {
   v.hidden = true; v.innerHTML = ""; delete v.dataset.id; document.body.style.overflow = "";
 }
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#espView").hidden) location.hash = "especiais"; });
+
+/* ---------------- memórias: registro dos encontros ---------------- */
+const miniCache = new Map();
+async function miniDaFoto(id) {
+  if (!id) return null;
+  if (!miniCache.has(id)) miniCache.set(id, getDoc(doc(db, "fotos", id)).then(s => s.exists() ? s.data().mini : null).catch(() => null));
+  return miniCache.get(id);
+}
+function registrosOrdenados() {
+  return estado.registros.map(r => ({ r, e: estado.encontros.find(x => x.id === r.id) }))
+    .filter(x => x.e).sort((a, b) => b.e.data.localeCompare(a.e.data));
+}
+function renderMemorias() {
+  const lista = registrosOrdenados();
+  $("#memoriasBloco").hidden = !lista.length;
+  $("#linkMemorias").hidden = !lista.length;
+  const grid = $("#memGrid");
+  const chave = lista.map(x => x.r.id + ":" + (x.r.capa || "") + ":" + (x.r.atualizadoEm || "") + ":" + (x.e.livroId || "")).join("|");
+  if (grid.dataset.chave === chave) { abrirRegistroPeloEndereco(); return; }
+  grid.dataset.chave = chave;
+  grid.innerHTML = lista.map(({ r, e }) => {
+    const d = parseData(e.data), l = e.livroId ? livroPorId(e.livroId) : null;
+    return `<a class="mem-card" href="#reg-${esc(r.id)}">
+      <div class="mem-foto" data-capa-foto="${esc(r.capa || "")}">${r.capa ? "" : `<span class="mem-sem">sem fotos</span>`}</div>
+      <div class="mem-txt">
+        <span class="mem-mes">${MESES_CAP[d.getMonth()]}</span>
+        <span class="label">${dataCurta(e.data)} ${d.getFullYear()}${e.local ? " · " + esc(e.local) : ""}</span>
+        <h3>${l ? esc(l.titulo) : esc(e.titulo || "Encontro")}</h3>
+        ${r.frase ? `<p class="mem-frase">“${esc(r.frase)}”</p>` : ""}
+      </div></a>`;
+  }).join("");
+  grid.querySelectorAll("[data-capa-foto]").forEach(async el => {
+    const mini = await miniDaFoto(el.dataset.capaFoto);
+    if (mini) el.innerHTML = `<img src="${mini}" alt="">`;
+  });
+  abrirRegistroPeloEndereco();
+}
+
+const lb = { fotos: [], i: 0, grandes: new Map() };
+function abrirRegistroPeloEndereco() {
+  const m = location.hash.match(/^#reg-(.+)$/);
+  const id = m ? decodeURIComponent(m[1]) : null;
+  const x = id ? registrosOrdenados().find(y => y.r.id === id) : null;
+  if (x) abrirRegistroView(x.r, x.e); else fecharRegistroView();
+}
+async function abrirRegistroView(r, e) {
+  const v = $("#regView");
+  const assinatura = r.id + ":" + (r.atualizadoEm || "");
+  if (!v.hidden && v.dataset.assinatura === assinatura) return;
+  const novo = v.hidden || v.dataset.id !== r.id;
+  v.dataset.id = r.id; v.dataset.assinatura = assinatura;
+  const d = parseData(e.data), l = e.livroId ? livroPorId(e.livroId) : null;
+  const estrelas = r.nota != null ? `<p class="mem-nota" aria-label="Nota média ${String(r.nota).replace(".", ",")} de 5">${"★".repeat(Math.floor(r.nota))}${"☆".repeat(5 - Math.floor(r.nota))} <span>${String(r.nota).replace(".", ",")} de 5</span></p>` : "";
+  v.innerHTML = `<div class="wrap esp-artigo">
+    <button class="btn mini" type="button" id="regFechar">← Voltar ao site</button>
+    <header class="reg-cabeca">
+      <p class="esp-script">${MESES_CAP[d.getMonth()]} de ${d.getFullYear()}</p>
+      <h1 id="regTitulo">${l ? esc(l.titulo) : esc(e.titulo || "Nosso encontro")}</h1>
+      <p class="label">${esc(dataExtenso(e.data))}${e.local ? " · " + esc(e.local) : ""}</p>
+      ${estrelas}
+    </header>
+    ${l ? `<div class="reg-livro">${capaHTML(l)}<div><span class="label">Livro do encontro</span><p style="font-family:var(--f-display);font-size:22px">${esc(l.titulo)}</p><p class="small">${esc(l.autor)}</p></div></div>` : ""}
+    ${r.texto ? `<section class="esp-bloco">${linhas(r.texto).map(p => `<p>${esc(p)}</p>`).join("")}</section>` : ""}
+    ${r.frase ? `<blockquote class="reg-frase"><span class="label">Frase da noite</span><p>“${esc(r.frase)}”</p></blockquote>` : ""}
+    <section class="esp-bloco" id="regGaleriaBloco" hidden><h2>Fotos</h2><div class="galeria" id="regGaleria"></div></section>
+  </div>`;
+  v.hidden = false; document.body.style.overflow = "hidden";
+  if (novo) v.scrollTop = 0;
+  $("#regFechar").addEventListener("click", () => { location.hash = "memorias"; });
+  try {
+    const s = await getDocs(query(collection(db, "fotos"), where("encontro", "==", r.id)));
+    if (v.dataset.id !== r.id) return;
+    lb.fotos = s.docs.map(x => ({ id: x.id, ...x.data() })).sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+    $("#regGaleriaBloco").hidden = !lb.fotos.length;
+    $("#regGaleria").innerHTML = lb.fotos.map((f, i) => `<button type="button" class="gal-item" data-foto="${i}" aria-label="Ampliar foto ${i + 1}${f.legenda ? ": " + esc(f.legenda) : ""}"><img src="${f.mini}" alt="" loading="lazy"></button>`).join("");
+    $("#regGaleria").addEventListener("click", (ev) => { const b = ev.target.closest("[data-foto]"); if (b) abrirLightbox(Number(b.dataset.foto)); });
+  } catch (err) { console.error(err); }
+}
+function fecharRegistroView() {
+  const v = $("#regView"); if (!v || v.hidden) return;
+  v.hidden = true; v.innerHTML = ""; delete v.dataset.id; delete v.dataset.assinatura;
+  if ($("#espView").hidden) document.body.style.overflow = "";
+}
+async function mostrarFoto() {
+  const f = lb.fotos[lb.i]; if (!f) return;
+  const img = $("#lbImg");
+  img.src = lb.grandes.get(f.id) || f.mini;
+  $("#lbLegenda").textContent = f.legenda || "";
+  $("#lbConta").textContent = `${lb.i + 1} de ${lb.fotos.length}`;
+  $("#lbAnt").hidden = lb.i === 0; $("#lbProx").hidden = lb.i === lb.fotos.length - 1;
+  if (!lb.grandes.has(f.id)) {
+    try {
+      const g = await getDoc(doc(db, "fotosGrandes", f.id));
+      if (g.exists()) { lb.grandes.set(f.id, g.data().img); if (lb.fotos[lb.i]?.id === f.id) img.src = g.data().img; }
+    } catch (err) { console.error(err); }
+  }
+}
+function abrirLightbox(i) { lb.i = i; $("#lightbox").hidden = false; mostrarFoto(); $("#lbFechar").focus(); }
+function fecharLightbox() { const l = $("#lightbox"); if (l) l.hidden = true; }
+function passarFoto(d) { const n = lb.i + d; if (n >= 0 && n < lb.fotos.length) { lb.i = n; mostrarFoto(); } }
+$("#lbFechar").addEventListener("click", fecharLightbox);
+$("#lbAnt").addEventListener("click", () => passarFoto(-1));
+$("#lbProx").addEventListener("click", () => passarFoto(1));
+$("#lightbox").addEventListener("click", (e) => { if (e.target.id === "lightbox") fecharLightbox(); });
+let toqueX = null;
+$("#lightbox").addEventListener("touchstart", (e) => { toqueX = e.touches[0].clientX; }, { passive: true });
+$("#lightbox").addEventListener("touchend", (e) => {
+  if (toqueX === null) return; const dx = e.changedTouches[0].clientX - toqueX; toqueX = null;
+  if (Math.abs(dx) > 50) passarFoto(dx < 0 ? 1 : -1);
+});
+document.addEventListener("keydown", (e) => {
+  if (!$("#lightbox").hidden) {
+    if (e.key === "Escape") { fecharLightbox(); e.stopImmediatePropagation(); }
+    else if (e.key === "ArrowRight") passarFoto(1);
+    else if (e.key === "ArrowLeft") passarFoto(-1);
+    return;
+  }
+  if (e.key === "Escape" && !$("#regView").hidden) location.hash = "memorias";
+}, true);
