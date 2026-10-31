@@ -2,9 +2,9 @@
 import {
   auth, db, entrar, trocarSenha, onAuthStateChanged, signOut, esc, usuarioDoEmail, isAdminEmail,
   dataExtenso, dataCurta, hojeISO, diasAte, parseData, MESES_CAP, capaHTML, ligarTema
-} from "./firebase.js?v=20261031b";
-import { enfeitarRosto, planta } from "./ornamentos.js?v=20261031b";
-import { cardCaderno, pintarCartoes, abrirCadernoPeloEndereco, fecharCaderno, contextoCaderno } from "./caderno.js?v=20261031b";
+} from "./firebase.js?v=20261031d";
+import { enfeitarRosto, planta } from "./ornamentos.js?v=20261031d";
+import { cardCaderno, pintarCartoes, abrirCadernoPeloEndereco, fecharCaderno, contextoCaderno } from "./caderno.js?v=20261031d";
 import {
   doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -142,7 +142,7 @@ onAuthStateChanged(auth, async (user) => {
     $("#nomeTopo").textContent = m.nome;
     $("#nomeMenu").textContent = m.nome;
     $("#saudacao").textContent = `Que bom te ver por aqui, ${m.nome}.`;
-    $("#linkPainel").hidden = !admin;
+    $("#linkPainel").hidden = !admin; $("#linkPainelTopo").hidden = !admin;
     if (m.trocarSenha) abrirTrocaSenha(false); else $("#modalSenha").hidden = true;
     mostrar("app");
     ouvir();

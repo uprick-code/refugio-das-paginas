@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Caveat:wght@500;700&family=Patrick+Hand+SC&family=Playfair+Display:wght@800&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Courier+Prime:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&family=Pinyon+Script&display=swap">
-<link rel="stylesheet" href="css/estilo.css?v=20261031b">
+<link rel="stylesheet" href="css/estilo.css?v=20261031d">
 </head>
 <body>
 
@@ -32,7 +32,7 @@
       <a href="admin.html" id="linkPainel" hidden>Painel da Taís</a>
       <div class="menu-conta"><span id="nomeMenu"></span><span style="display:flex;gap:16px"><button class="linkbtn" type="button" data-trocar-senha>Trocar senha</button><button class="linkbtn" type="button" id="btnSairMenu">Sair</button></span></div>
     </div>
-    <div class="quem-sou" id="quemSou" hidden><span id="nomeTopo"></span><button class="linkbtn" type="button" data-trocar-senha>Trocar senha</button><button class="linkbtn" type="button" id="btnSair">Sair</button></div>
+    <div class="quem-sou" id="quemSou" hidden><a href="admin.html" id="linkPainelTopo" class="painel-topo" hidden>Painel da Taís</a><span id="nomeTopo"></span><button class="linkbtn" type="button" data-trocar-senha>Trocar senha</button><button class="linkbtn" type="button" id="btnSair">Sair</button></div>
   </div>
 </nav>
 
@@ -201,6 +201,6 @@
     if (c && !c.hidden) c.innerHTML = 'Não foi possível abrir esta página. Recarregue com <b>Ctrl+Shift+R</b> (no celular, feche a aba e abra de novo).<br><small style="opacity:.7">' + (e.message || "") + '</small>';
   }, true);
 </script>
-<script type="module" src="js/app.js?v=20261031b"></script>
+<script type="module" src="js/app.js?v=20261031d"></script>
 </body>
 </html>
