@@ -50,3 +50,7 @@ No topo do painel há dois botões. **Cópia dos dados** gera um arquivo `.json`
 A lista fica em dois lugares, que precisam bater: `ADMINS` em `js/firebase.js` e `isAdmin()` em `firestore.rules`.
 Qualquer pessoa (leitora ou administradora) troca a própria senha pelo link **Trocar senha**, no topo do site ou no menu do celular, confirmando a senha atual.
 Se uma administradora **esquecer** a senha, apague a conta dela em Authentication e crie de novo com o mesmo e-mail; ao entrar, o site atualiza o cadastro sozinho. Leitoras que esquecem a senha recebem uma nova pelo painel (**Leitoras → Nova senha**).
+
+## Versões e cache
+
+O GitHub Pages deixa os arquivos guardados no navegador por até 10 minutos. Para que uma atualização nunca misture arquivos novos com antigos, todos os `import` entre os arquivos de `js/` e os links em `index.html` e `admin.html` levam a mesma marca de versão (`?v=...`). **A cada publicação, troque a marca em todos os lugares de uma vez** (a mesma em todos os arquivos, senão o Firebase é carregado duas vezes). Se o código não carregar, a página mostra um aviso pedindo para recarregar.

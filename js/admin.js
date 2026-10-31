@@ -3,7 +3,7 @@ import {
   auth, db, firebaseConfig, onAuthStateChanged, signOut, esc, emailDe, usuarioDoEmail, isAdminEmail,
   normalizaUsuario, dataCurta, hojeISO, capaHTML, ligarTema, ADMINS, prepararCapa, guardarCapaNoCache,
   prepararFoto, tamanhoLegivel
-} from "./firebase.js";
+} from "./firebase.js?v=20261031b";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { initializeAuth, inMemoryPersistence, createUserWithEmailAndPassword, signOut as sairDe }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
@@ -11,8 +11,8 @@ import {
   doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, collection, onSnapshot, query, orderBy,
   serverTimestamp, writeBatch, where, increment
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { ACERVO_INICIAL } from "./acervo-inicial.js";
-import { abrirLivrosCaderno, apagarLivrosDoCaderno, renderImportarCadernos } from "./caderno-admin.js";
+import { ACERVO_INICIAL } from "./acervo-inicial.js?v=20261031b";
+import { abrirLivrosCaderno, apagarLivrosDoCaderno, renderImportarCadernos } from "./caderno-admin.js?v=20261031b";
 
 const $ = (s) => document.querySelector(s);
 ligarTema($("#themeBtn"));

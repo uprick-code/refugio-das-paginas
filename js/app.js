@@ -2,9 +2,9 @@
 import {
   auth, db, entrar, trocarSenha, onAuthStateChanged, signOut, esc, usuarioDoEmail, isAdminEmail,
   dataExtenso, dataCurta, hojeISO, diasAte, parseData, MESES_CAP, capaHTML, ligarTema
-} from "./firebase.js";
-import { enfeitarRosto, planta } from "./ornamentos.js";
-import { cardCaderno, pintarCartoes, abrirCadernoPeloEndereco, fecharCaderno, contextoCaderno } from "./caderno.js";
+} from "./firebase.js?v=20261031b";
+import { enfeitarRosto, planta } from "./ornamentos.js?v=20261031b";
+import { cardCaderno, pintarCartoes, abrirCadernoPeloEndereco, fecharCaderno, contextoCaderno } from "./caderno.js?v=20261031b";
 import {
   doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
