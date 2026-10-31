@@ -1,9 +1,9 @@
 // Painel da Taís: leitoras, encontros, votação e acervo.
 import {
   auth, db, firebaseConfig, onAuthStateChanged, signOut, esc, emailDe, usuarioDoEmail, isAdminEmail,
-  normalizaUsuario, dataCurta, hojeISO, capaHTML, ligarTema, ADMINS, prepararCapa, guardarCapaNoCache,
+  normalizaUsuario, dataCurta, hojeISO, capaHTML, ligarTema, ADMINS, prepararCapa, prepararIlustracao, guardarCapaNoCache,
   prepararFoto, tamanhoLegivel
-} from "./firebase.js?v=20261031d";
+} from "./firebase.js?v=20261031e";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { initializeAuth, inMemoryPersistence, createUserWithEmailAndPassword, signOut as sairDe }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
@@ -11,8 +11,8 @@ import {
   doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, collection, onSnapshot, query, orderBy,
   serverTimestamp, writeBatch, where, increment
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { ACERVO_INICIAL } from "./acervo-inicial.js?v=20261031d";
-import { abrirLivrosCaderno, apagarLivrosDoCaderno, renderImportarCadernos } from "./caderno-admin.js?v=20261031d";
+import { ACERVO_INICIAL } from "./acervo-inicial.js?v=20261031e";
+import { abrirLivrosCaderno, apagarLivrosDoCaderno, renderImportarCadernos } from "./caderno-admin.js?v=20261031e";
 
 const $ = (s) => document.querySelector(s);
 ligarTema($("#themeBtn"));
@@ -489,7 +489,7 @@ $("#btnCancelarEsp").addEventListener("click", limparEsp);
 $("#xArquivo").addEventListener("change", async (e) => {
   const arq = e.target.files[0]; if (!arq) return;
   $("#fotoErro").textContent = "";
-  try { S.fotoNova = await prepararCapa(arq); S.tirarFoto = false; previaFoto(`<img src="${S.fotoNova}" alt="Prévia da foto">`); }
+  try { S.fotoNova = await (formatoEsp() === "caderno" ? prepararIlustracao(arq) : prepararCapa(arq)); S.tirarFoto = false; previaFoto(`<img src="${S.fotoNova}" alt="Prévia da foto">`); }
   catch (err) { $("#fotoErro").textContent = err.message; }
   e.target.value = "";
 });

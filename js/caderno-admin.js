@@ -1,7 +1,7 @@
 // Painel: livros de um caderno de leitura (lista, títulos em lote, ficha com capa e ilustração)
 // e a importação dos dois cadernos da Taís.
-import { db, esc, capaHTML, prepararCapa, prepararIlustracao, guardarCapaNoCache } from "./firebase.js?v=20261031d";
-import { desenharCapa, temaDe } from "./caderno.js?v=20261031d";
+import { db, esc, capaHTML, prepararCapa, prepararIlustracao, guardarCapaNoCache } from "./firebase.js?v=20261031e";
+import { desenharCapa, temaDe } from "./caderno.js?v=20261031e";
 import {
   doc, getDocs, setDoc, deleteDoc, collection, query, where, onSnapshot, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
