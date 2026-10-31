@@ -12,6 +12,7 @@ import {
   serverTimestamp, writeBatch, where, increment
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { ACERVO_INICIAL } from "./acervo-inicial.js";
+import { abrirLivrosCaderno, apagarLivrosDoCaderno, renderImportarCadernos } from "./caderno-admin.js";
 
 const $ = (s) => document.querySelector(s);
 ligarTema($("#themeBtn"));
@@ -465,8 +466,22 @@ function previaFoto(html) {
   const atual = S.editEsp && S.especiais.find(x => x.id === S.editEsp);
   $("#btnTirarFoto").hidden = !S.fotoNova && !(atual?.fotoDb && !S.tirarFoto);
 }
+// Formato do especial: "Página do autor" (biografia, linha do tempo) ou "Caderno de leitura" (coleção de livros).
+function formatoEsp() { return $("#xFmtCaderno").checked ? "caderno" : "pagina"; }
+function ajustarFormato() {
+  const cad = formatoEsp() === "caderno";
+  document.querySelectorAll("#formEsp .so-caderno").forEach(el => el.hidden = !cad);
+  document.querySelectorAll("#formEsp .so-pagina").forEach(el => el.hidden = cad);
+  $("#lblXTitulo").textContent = cad ? "Título do caderno" : "Título";
+  $("#xTitulo").placeholder = cad ? "Livros e reflexões" : "Han Kang";
+  $("#lblXAutor").textContent = cad ? "Autor ou autora dos livros" : "Subtítulo";
+  $("#xAutor").placeholder = cad ? "Byung-Chul Han" : "Coreia do Sul · Nobel de Literatura 2024";
+  $("#lblXChamada").textContent = cad ? "Citação da abertura (opcional)" : "Frase de abertura";
+  $("#lblXFoto").textContent = cad ? "Imagem de abertura" : "Foto";
+}
+document.querySelectorAll("input[name=xFormato]").forEach(r => r.addEventListener("change", ajustarFormato));
 function limparEsp() {
-  S.editEsp = null; S.fotoNova = null; S.tirarFoto = false; $("#formEsp").reset();
+  S.editEsp = null; S.fotoNova = null; S.tirarFoto = false; $("#formEsp").reset(); ajustarFormato();
   $("#tituloEsp").textContent = "Novo especial"; $("#btnCancelarEsp").hidden = true;
   $("#fotoErro").textContent = ""; $("#espErro").textContent = ""; previaFoto(""); renderLivrosEsp([]);
 }
@@ -484,6 +499,11 @@ $("#formEsp").addEventListener("submit", async (e) => {
   const dados = Object.fromEntries(Object.entries(CAMPOS_ESP).map(([k, sel]) => [k, $(sel).value.trim()]));
   dados.livros = [...document.querySelectorAll("#xLivros input:checked")].map(i => i.value);
   dados.publicado = $("#xPublicado").checked;
+  dados.formato = formatoEsp();
+  if (dados.formato === "caderno") {
+    Object.assign(dados, { tema: $("#xTema").value, rotuloAutor: $("#xRotulo").value, destaque: $("#xDestaque").value.trim(),
+      citacaoAutor: $("#xCitAutor").value.trim(), usaEstrelas: $("#xEstrelas").checked, atualizadoEm: Date.now() });
+  }
   $("#espErro").textContent = "";
   const btn = e.target.querySelector("button[type=submit]"); btn.disabled = true;
   try {
@@ -506,13 +526,15 @@ $("#formEsp").addEventListener("submit", async (e) => {
 function renderEspeciais() {
   $("#tEsp").innerHTML = S.especiais.length ? S.especiais.map(x => `<tr>
     <td style="width:52px">${x.fotoDb ? capaHTML(fotoDe(x), "mini-capa") : ""}</td>
-    <td><b style="font-family:var(--f-display);font-size:18px">${esc(x.titulo)}</b><br><span class="small">${esc(x.autor || "")}</span></td>
+    <td><b style="font-family:var(--f-display);font-size:18px">${esc(x.formato === "caderno" ? (x.destaque || x.autor || x.titulo) : x.titulo)}</b><br><span class="small">${esc(x.formato === "caderno" ? "Caderno · " + (x.titulo || "") : (x.autor || ""))}</span></td>
     <td>${x.publicado ? '<span class="chip verde">publicado</span>' : '<span class="chip">rascunho</span>'}</td>
     <td><div class="acoes">
+      ${x.formato === "caderno" ? `<button class="btn mini solid" type="button" data-livroscad="${esc(x.id)}">Livros</button>` : ""}
       <button class="btn mini" type="button" data-editesp="${esc(x.id)}">Editar</button>
       <button class="btn mini" type="button" data-pubesp="${esc(x.id)}">${x.publicado ? "Despublicar" : "Publicar"}</button>
       <button class="btn mini perigo" type="button" data-apagaesp="${esc(x.id)}">Apagar</button></div></td></tr>`).join("")
     : `<tr><td colspan="4" class="vazio">Nenhum especial ainda. Comece pelo formulário ao lado; ele fica como rascunho até você marcar "Publicado".</td></tr>`;
+  renderImportarCadernos(S.especiais);
 }
 $("#tEsp").addEventListener("click", async (ev) => {
   const ed = ev.target.closest("[data-editesp]");
@@ -521,11 +543,17 @@ $("#tEsp").addEventListener("click", async (ev) => {
     S.editEsp = x.id; S.fotoNova = null; S.tirarFoto = false;
     Object.entries(CAMPOS_ESP).forEach(([k, sel]) => $(sel).value = x[k] || "");
     $("#xPublicado").checked = !!x.publicado; renderLivrosEsp(x.livros || []);
+    (x.formato === "caderno" ? $("#xFmtCaderno") : $("#xFmtPagina")).checked = true;
+    $("#xTema").value = x.tema || "estrelas"; $("#xRotulo").value = x.rotuloAutor || "Autor";
+    $("#xDestaque").value = x.destaque || ""; $("#xCitAutor").value = x.citacaoAutor || ""; $("#xEstrelas").checked = x.usaEstrelas !== false;
+    ajustarFormato();
     $("#tituloEsp").textContent = "Editar especial"; $("#btnCancelarEsp").hidden = false;
     previaFoto(x.fotoDb ? capaHTML(fotoDe(x)) : "");
     $("#formEsp").scrollIntoView({ behavior: "smooth", block: "nearest" });
     return;
   }
+  const lc = ev.target.closest("[data-livroscad]");
+  if (lc) { const x = S.especiais.find(y => y.id === lc.dataset.livroscad); if (x) abrirLivrosCaderno(x); return; }
   const pb = ev.target.closest("[data-pubesp]");
   if (pb) {
     const x = S.especiais.find(y => y.id === pb.dataset.pubesp); if (!x) return;
@@ -537,6 +565,7 @@ $("#tEsp").addEventListener("click", async (ev) => {
     if (ap.dataset.confirma !== "1") { ap.dataset.confirma = "1"; ap.textContent = "Confirmar?"; return; }
     const id = ap.dataset.apagaesp, tinhaFoto = !!S.especiais.find(y => y.id === id)?.fotoDb;
     try {
+      if (S.especiais.find(y => y.id === id)?.formato === "caderno") await apagarLivrosDoCaderno(id);
       await deleteDoc(doc(db, "especiais", id));
       if (tinhaFoto) await deleteDoc(doc(db, "capas", "esp_" + id)).catch(() => {});
     } catch (err) { console.error(err); }
@@ -580,6 +609,8 @@ $("#btnBackup").addEventListener("click", async () => {
       capas: await lerColecao("capas"),
       config: await lerColecao("config"),
       registros: await lerColecao("registros"),
+      cadernoLivros: await lerColecao("cadernoLivros"),
+      reflexoes: {},
       fotos: {},
       votos: {}
     };
@@ -590,6 +621,9 @@ $("#btnBackup").addEventListener("click", async () => {
     }
     for (const id of Object.keys(dados.livros)) {
       const n = await lerColecao("livros", id, "notas"); if (Object.keys(n).length) dados.notas[id] = n;
+    }
+    for (const id of Object.keys(dados.cadernoLivros)) {
+      const r = await lerColecao("cadernoLivros", id, "reflexoes"); if (Object.keys(r).length) dados.reflexoes[id] = r;
     }
     for (const id of Object.keys(dados.encontros)) {
       const p = await lerColecao("encontros", id, "presencas"); if (Object.keys(p).length) dados.presencas[id] = p;

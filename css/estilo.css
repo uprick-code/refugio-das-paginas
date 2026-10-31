@@ -366,3 +366,113 @@ label.btn[aria-disabled="true"]{opacity:.5;pointer-events:none}
 .lb-prox{right:max(8px,env(safe-area-inset-right,0px))}
 .lb-conta{position:absolute;bottom:max(14px,env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;color:#B4A998;font-family:var(--f-type);font-size:12.5px}
 @media (prefers-reduced-motion: reduce){.mem-card,.mem-card:nth-child(n){transform:none}}
+
+/* ===================== caderno de leitura ===================== */
+:root{ --ruled:#FFFDF6; --rule:#E2DBCB; --night:#1C1916; --hl:#F7A8C8;
+  --f-hand:"Caveat","Bradley Hand",cursive; --f-label:"Patrick Hand SC","Comic Sans MS",cursive;
+  --f-cut1:"Playfair Display",Didot,serif; --f-cut2:"Archivo Black",Impact,sans-serif; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --ruled:#2A2520; --rule:#3B352D; --night:#100E0C; --hl:#B8577F; }}
+:root[data-theme="dark"]{ --ruled:#2A2520; --rule:#3B352D; --night:#100E0C; --hl:#B8577F; }
+
+.cad-card .esp-foto canvas{width:100%;aspect-ratio:2/3;display:block;box-shadow:4px 5px 0 -1px var(--paper-2),4px 5px 0 0 var(--line)}
+.cad-view .esp-artigo.cad{max-width:1080px}
+.estrelado,.cad-view.tema-estrelas .cad-abertura,.cad-view.tema-estrelas .cad-moldura{background-color:var(--night);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cg fill='%23C9A04A'%3E%3Cpath d='M12 4l2.1 4.6 5 .5-3.8 3.4 1.1 4.9L12 14.9 7.6 17.4l1.1-4.9L4.9 9.1l5-.5z'/%3E%3Cpath d='M44 30l1.4 3 3.3.4-2.5 2.2.7 3.2L44 37.2l-2.9 1.6.7-3.2-2.5-2.2 3.3-.4z' opacity='.85'/%3E%3Cpath d='M26 46l1 2.2 2.4.2-1.8 1.6.5 2.4-2.1-1.2-2.1 1.2.5-2.4-1.8-1.6 2.4-.2z' opacity='.7'/%3E%3Cpath d='M56 54l.8 1.7 1.9.2-1.4 1.2.4 1.8-1.7-.9-1.7.9.4-1.8-1.4-1.2 1.9-.2z' opacity='.6'/%3E%3C/g%3E%3C/svg%3E")}
+.cad-abertura{margin-top:22px;padding:22px}
+.cad-folha{background:var(--ruled);background-image:repeating-linear-gradient(to bottom,transparent 0 29px,var(--rule) 29px 30px);padding:34px 22px 30px;display:grid;gap:18px;justify-items:center;text-align:center}
+.etiquetas{display:grid;gap:6px;justify-items:center}
+.etq{display:inline-block;background:#fff;color:#1b1714;padding:2px 12px 0;box-shadow:0 1px 0 rgba(0,0,0,.15);max-width:100%;overflow-wrap:anywhere}
+.etq.e1{font-family:var(--f-cut1);font-size:clamp(20px,4.4vw,34px);letter-spacing:.02em;transform:rotate(-1.2deg)}
+.etq.e2{font-family:var(--f-cut2);font-size:clamp(34px,9vw,74px);line-height:1.05;transform:rotate(.8deg);clip-path:polygon(0 4%,3% 0,40% 3%,72% 0,100% 5%,98% 92%,64% 100%,30% 95%,2% 100%)}
+.etq.e3{font-family:var(--f-cut2);font-size:clamp(30px,8vw,64px);line-height:1.05;transform:rotate(-1.6deg)}
+.paleta{display:flex;gap:4px;align-items:center}
+.paleta i{width:14px;height:14px;border-radius:50%;display:block}
+.cad-ilus-abertura{width:min(100%,440px);aspect-ratio:4/5;border:1px solid var(--line);overflow:hidden;background:var(--paper-2)}
+.cad-ilus-abertura svg,.cad-ilus-abertura img{width:100%;height:100%;object-fit:cover;display:block}
+.progresso{display:grid;gap:6px;width:min(100%,420px)}
+.barra{height:8px;background:var(--paper-2);border-radius:4px;overflow:hidden}
+.barra i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--rose))}
+.cad-citacao{margin:0;max-width:440px;background:#f6efdf;color:#3b3127;padding:22px 26px;border:1px solid #d9c9a8;box-shadow:0 6px 16px -8px rgba(0,0,0,.3);transform:rotate(-.8deg)}
+.cad-citacao blockquote{margin:0;font-family:var(--f-display);font-size:24px;line-height:1.35}
+.cad-citacao figcaption{margin-top:8px;font-family:var(--f-display);font-style:italic;font-size:16px;color:#6d5d4a}
+.cad-colecao-sec .sec-head{margin-top:52px}
+.cad-moldura{padding:18px}
+.cad-grade{background:#fdfcf8;padding:22px 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:22px 16px}
+@media (min-width:760px){.tema-estrelas .cad-grade{grid-template-columns:repeat(6,1fr)}.tema-campo .cad-grade{grid-template-columns:repeat(4,1fr);gap:26px 22px}}
+.cad-item{display:grid;gap:6px;justify-items:center;cursor:pointer;background:none;border:0;padding:0;color:#2a2420;min-width:0}
+.cad-item:hover .cad-mini{transform:translateY(-3px)}
+.cad-mini{width:100%;aspect-ratio:2/3;transition:transform .15s;box-shadow:2px 3px 0 rgba(0,0,0,.12);background:#e9e2d4}
+.cad-mini canvas,.cad-mini img{width:100%;height:100%;object-fit:cover;display:block}
+.cad-view .estrelas{font-size:15px;letter-spacing:1px;color:#b7ae9f;line-height:1}
+.cad-view .estrelas b{color:var(--gold);font-weight:400}
+.selo-st{font-family:var(--f-type);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#6b6158}
+.selo-st.lendo{color:#9E5A51}
+.selo-st.lido{color:#3f6b3a}
+.cad-ficha-sec .sec-head{margin-top:52px}
+.ficha-wrap{display:grid;grid-template-columns:1fr 1fr;box-shadow:0 18px 30px -22px rgba(0,0,0,.5);border:1px solid var(--line)}
+.ficha-wrap.sem-ilus{grid-template-columns:1fr}
+@media (max-width:820px){.ficha-wrap{grid-template-columns:1fr}}
+.ficha-ilus{position:relative;min-height:420px;overflow:hidden;background:var(--night)}
+.ficha-ilus svg,.ficha-ilus img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cartao{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-1deg);width:min(70%,300px);background:#f6efdf;color:#2c2620;padding:26px 22px;text-align:center;border:1px solid #b9a98a;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.cartao::before{content:"";position:absolute;inset:7px;border:1.5px solid #b9a98a;border-radius:2px}
+.cartao h3{font-family:var(--f-hand);font-size:34px;font-weight:700;text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1.5px}
+.cartao p{font-family:var(--f-hand);font-size:22px;line-height:1.15;margin-top:8px}
+.ficha-ilus.lua .cartao{top:20%;left:30%;transform:translate(-50%,-50%);width:auto;background:transparent;border:0;box-shadow:none;padding:0}
+.ficha-ilus.lua .cartao::before{display:none}
+.ficha-ilus.lua .cartao h3{font-size:30px;text-decoration:none;transform:rotate(-12deg)}
+.ficha{position:relative;background:var(--ruled);background-image:repeating-linear-gradient(to bottom,transparent 0 31px,var(--rule) 31px 32px);background-position:0 10px;padding:26px 26px 30px;line-height:32px;min-width:0}
+.ficha-topo{display:grid;grid-template-columns:110px 1fr;gap:18px;align-items:start}
+@media (max-width:420px){.ficha-topo{grid-template-columns:86px 1fr;gap:12px}.ficha{padding:22px 16px 26px}}
+.campos{list-style:none;margin:0;padding:0;font-size:15px;min-width:0}
+.campos li{display:flex;gap:6px;flex-wrap:wrap;min-height:32px}
+.campos .k{font-family:var(--f-label);font-size:16px;text-decoration:underline;text-underline-offset:4px;white-space:nowrap}
+.campos .v{font-family:var(--f-hand);font-size:21px;line-height:32px;overflow-wrap:anywhere}
+.campos .vazio{color:var(--ink-soft);opacity:.55}
+.campos .aval{color:var(--gold);letter-spacing:2px;font-size:18px}
+.resumo-tit{font-family:var(--f-label);font-size:18px;text-decoration:underline;text-underline-offset:4px;margin-top:32px}
+.resumo p{text-indent:2em;font-size:16px}
+.cad-view mark{background:linear-gradient(transparent 20%,var(--hl) 20%,var(--hl) 85%,transparent 85%);color:inherit;padding:0 2px;border-radius:2px}
+.washi-canto{position:absolute;top:-10px;right:18px;width:130px;height:30px;transform:rotate(14deg);opacity:.9;
+  background:radial-gradient(circle at 10px 15px,var(--rose) 0 5px,transparent 5.5px),radial-gradient(ellipse 5px 2.4px at 24px 9px,var(--sage) 0 99%,transparent 100%),radial-gradient(ellipse 5px 2.4px at 24px 21px,var(--sage) 0 99%,transparent 100%),color-mix(in srgb,var(--rose-soft) 85%,transparent);background-size:32px 30px}
+.na-fila{margin-top:32px;font-family:var(--f-hand);font-size:22px;color:var(--ink-soft)}
+.nav-ficha{display:flex;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap}
+.reflexoes{display:grid;grid-template-columns:330px 1fr;gap:28px;align-items:start;margin-top:30px}
+.reflexoes > *{min-width:0}
+@media (max-width:820px){.reflexoes{grid-template-columns:1fr}}
+.lista-ref{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:14px}
+.ref{background:var(--card);border:1px solid var(--line);padding:14px 16px;display:grid;gap:6px;position:relative}
+.ref::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rose)}
+.ref .quem{font-family:var(--f-type);font-size:12.5px;color:var(--ink-soft)}
+.ref .txt{font-family:var(--f-hand);font-size:22px;line-height:1.3;white-space:pre-wrap;overflow-wrap:anywhere}
+.ref .acoes{display:flex;gap:8px;flex-wrap:wrap}
+.vazio-ref{font-style:italic;color:var(--ink-soft)}
+
+/* tema Campo florido (Anne) */
+.cad-view.tema-campo .cad-abertura{background:linear-gradient(135deg,#F6D3DA,#E8A9B8);position:relative}
+.cad-view.tema-campo .cad-folha{background:radial-gradient(ellipse at 20% 15%,rgba(255,255,255,.7),transparent 55%),radial-gradient(ellipse at 85% 80%,rgba(255,255,255,.5),transparent 50%),#F9E6EA;background-image:none}
+.campo-titulo{display:grid;justify-items:center;position:relative;padding:10px 20px 0}
+.campo-pre{font-family:var(--f-hand);font-size:28px;color:#5d7f55;justify-self:start;transform:rotate(-3deg)}
+.fita-kraft{position:absolute;left:50%;top:44px;transform:translateX(-50%) rotate(-1.5deg);width:min(86%,420px);height:64px;background:#c9a77f;opacity:.75;
+  clip-path:polygon(0 12%,4% 0,12% 10%,22% 2%,35% 9%,48% 0,61% 8%,74% 1%,86% 9%,96% 0,100% 14%,98% 86%,92% 100%,80% 90%,66% 99%,52% 91%,38% 100%,24% 92%,10% 100%,2% 90%)}
+.campo-autor{position:relative;font-family:var(--f-script);font-size:clamp(46px,10vw,78px);line-height:1;color:#2f5a2c;text-shadow:0 1px 0 #fff}
+.cad-view.tema-campo .cad-moldura{background:#f4efe6;background-image:radial-gradient(ellipse 120px 50px at 8% 6%,rgba(125,176,74,.35),transparent 70%),radial-gradient(ellipse 140px 60px at 95% 96%,rgba(125,176,74,.3),transparent 70%),repeating-linear-gradient(to bottom,transparent 0 22px,rgba(120,100,80,.08) 22px 23px);border-radius:14px}
+.cad-view.tema-campo .cad-grade{background:transparent}
+.cad-view.tema-campo .ficha-wrap{border:12px solid #D63A3A;box-shadow:0 18px 30px -22px rgba(0,0,0,.5)}
+.adesivo-jarro{position:absolute;left:14px;bottom:18px;width:70px;opacity:.95;pointer-events:none}
+.cad-view.tema-campo .ficha{padding-bottom:110px}
+
+/* janela de compartilhar */
+.cad-share .share-in{max-width:none;background:var(--card);border:1px solid var(--line);width:min(100%,860px);padding:22px;display:grid;grid-template-columns:1fr 300px;gap:24px;max-height:calc(100vh - 32px);overflow-y:auto}
+@media (max-width:720px){.cad-share .share-in{grid-template-columns:1fr}}
+.cad-share .share-in > *{min-width:0}
+.cad-share .modal{align-items:start}
+.cad-share{z-index:70;overflow-y:auto}
+.previa-img{width:100%;border:1px solid var(--line);display:block;background:var(--paper-2)}
+.opcoes{display:grid;gap:14px;align-content:start}
+.opcoes fieldset{display:grid;gap:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--paper);padding:7px 11px;cursor:pointer;font-size:14.5px;border-radius:2px}
+.seg input{accent-color:var(--rose-ink)}
+.seg input:disabled + *{opacity:.5}
+.legenda-txt{font-family:var(--f-type);font-size:12.5px;white-space:pre-wrap;background:var(--paper);border:1px dashed var(--line);padding:10px;max-height:160px;overflow:auto}

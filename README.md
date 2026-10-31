@@ -31,6 +31,12 @@ As leitoras entram com **usuário + senha**. Por baixo, o Firebase usa um e-mail
 
 Páginas sobre uma autora, um autor ou um tema, criadas pela Taís no painel (aba **Especiais**): foto, frase de abertura, "quem é", linha do tempo (uma linha por acontecimento, `ano — texto`), livros do acervo, curiosidades e links (`nome | https://…`). Ficam como rascunho até serem marcadas como publicadas. Dados na coleção `especiais`; a foto vai para `capas/esp_<id>`.
 
+### Cadernos de leitura
+
+Um especial pode ter o formato **Caderno de leitura**, inspirado nos cadernos da Taís: abertura com o título e uma imagem, a coleção de livros (capas, estrelas e situação), a ficha de cada livro (título, autor, editora, publicação, páginas, início, término, avaliação e resumo, com `==marca-texto==`) e as reflexões das leitoras. Cada livro pode ter capa e ilustração próprias; sem elas, o site desenha uma capa provisória. A ficha e as reflexões geram imagens para redes sociais (post 4:5 ou story 9:16) com legenda pronta.
+
+Há dois temas visuais: **Noite estrelada** (moldura escura com estrelas douradas, etiquetas de colagem) e **Campo florido** (aquarela rosa, fita kraft, moldura vermelha). No painel: **Especiais → formato Caderno**, e o botão **Livros** abre a lista, a entrada de títulos em lote e a ficha de cada livro. O botão **Criar os cadernos** importa os cadernos *Byung-Chul Han* (27 livros) e *Anne of Green Gables* (12 livros). Dados nas coleções `especiais` e `cadernoLivros` (com a subcoleção `reflexoes`); capas em `capas/cl_<livro>` e ilustrações em `capas/cli_<livro>`.
+
 ## Registro dos encontros (Memórias)
 
 No painel, **Encontros → Registro** abre o registro de um encontro: apresentação (um parágrafo por linha), frase da noite, nota média e até **24 fotos**, enviadas de uma vez pela galeria do celular. Cada foto é reduzida no navegador em duas versões: uma miniatura (até 480 px, ~30–60 KB) na coleção `fotos` e uma versão grande (até 1600 px, até ~350 KB) na coleção `fotosGrandes`, carregada só quando alguém amplia a foto. O total usado fica em `config/armazenamento` e aparece no topo do painel. Registros marcados como **Publicado** aparecem para as leitoras na seção **Nossos encontros** (menu **Memórias**). Apagar um encontro apaga também o registro e as fotos dele.

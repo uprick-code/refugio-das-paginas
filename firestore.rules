@@ -65,6 +65,22 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Cadernos de leitura: os livros de cada caderno e as reflexões das leitoras.
+    match /cadernoLivros/{id} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+
+      match /reflexoes/{r} {
+        allow read: if isMember();
+        allow create: if isMe(request.resource.data.autor)
+          && request.resource.data.keys().hasOnly(['autor', 'texto', 'criadoEm'])
+          && request.resource.data.texto is string
+          && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 800
+          && request.resource.data.criadoEm == request.time;
+        allow delete: if isAdmin() || isMe(resource.data.autor);
+      }
+    }
+
     // Capas e fotos enviadas pelo painel (imagem reduzida, guardada como texto).
     match /capas/{id} {
       allow read: if isMember();

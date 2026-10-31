@@ -176,6 +176,16 @@ export async function prepararFoto(arquivo) {
     throw new Error(`Não foi possível ler "${arquivo.name}". Use fotos JPG ou PNG (no computador, fotos HEIC do iPhone podem não abrir).`);
   } finally { URL.revokeObjectURL(url); }
 }
+// Ilustração da página da esquerda nos cadernos: até 1100 px, cabe na coleção "capas" (limite de 400 KB).
+export async function prepararIlustracao(arquivo) {
+  if (!arquivo || !arquivo.type.startsWith("image/")) throw new Error("Escolha um arquivo de imagem (JPG ou PNG).");
+  const url = URL.createObjectURL(arquivo);
+  try {
+    const imagem = await new Promise((ok, falha) => { const i = new Image(); i.onload = () => ok(i); i.onerror = falha; i.src = url; });
+    return reduzir(imagem, 1100, 330000);
+  } catch (e) { throw new Error("Não foi possível ler essa imagem. Use um arquivo JPG ou PNG."); }
+  finally { URL.revokeObjectURL(url); }
+}
 export function tamanhoLegivel(bytes) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / 1024 / 1024).toFixed(bytes < 10 * 1024 * 1024 ? 1 : 0).replace(".", ",")} MB`;

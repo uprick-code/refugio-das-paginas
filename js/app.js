@@ -4,6 +4,7 @@ import {
   dataExtenso, dataCurta, hojeISO, diasAte, parseData, MESES_CAP, capaHTML, ligarTema
 } from "./firebase.js";
 import { enfeitarRosto, planta } from "./ornamentos.js";
+import { cardCaderno, pintarCartoes, abrirCadernoPeloEndereco, fecharCaderno, contextoCaderno } from "./caderno.js";
 import {
   doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -109,7 +110,7 @@ $("#formSenha").addEventListener("submit", async (e) => {
 });
 
 function pararTudo() {
-  fecharEspecial(true); fecharRegistroView(); fecharLightbox();
+  fecharEspecial(true); fecharRegistroView(); fecharLightbox(); fecharCaderno();
   estado.subs.forEach(u => u()); estado.subs = [];
   [estado.subPresencas, estado.subVoto, estado.subNotas].forEach(u => u && u());
   estado.subPresencas = estado.subVoto = estado.subNotas = null;
@@ -137,6 +138,7 @@ onAuthStateChanged(auth, async (user) => {
       $("#loginErro").textContent = "Este acesso não está ativo. Fale com a Taís.";
       return;
     }
+    contextoCaderno({ usuario: u, admin, nomeDe: (x) => nomeDe(x) });
     $("#nomeTopo").textContent = m.nome;
     $("#nomeMenu").textContent = m.nome;
     $("#saudacao").textContent = `Que bom te ver por aqui, ${m.nome}.`;
@@ -499,12 +501,14 @@ function renderEspeciais() {
   const tem = estado.especiais.length > 0;
   $("#especiaisBloco").hidden = !tem;
   $("#linkEspeciais").hidden = !tem;
-  $("#espGrid").innerHTML = estado.especiais.map(e => `
+  $("#espGrid").innerHTML = estado.especiais.map(e => e.formato === "caderno" ? cardCaderno(e, !!e.fotoDb, capaHTML(fotoDe(e))) : `
     <a class="esp-card" href="#esp-${esc(e.id)}">
       <div class="esp-foto">${e.fotoDb || e.fotoUrl ? capaHTML(fotoDe(e)) : `<div class="sem-capa">${esc(e.autor || e.titulo)}</div>`}</div>
       <div class="esp-txt"><span class="label">Especial</span><h3>${esc(e.titulo)}</h3>${e.chamada ? `<p>${esc(e.chamada)}</p>` : ""}<span class="esp-ler">Ler o especial →</span></div>
     </a>`).join("");
+  pintarCartoes($("#espGrid"));
   abrirPeloEndereco();
+  abrirCadernoPeloEndereco(estado.especiais);
 }
 
 function linhas(txt) { return String(txt || "").split("\n").map(l => l.trim()).filter(Boolean); }
@@ -513,7 +517,7 @@ function abrirPeloEndereco() {
   const e = m ? estado.especiais.find(x => x.id === decodeURIComponent(m[1])) : null;
   if (e) abrirEspecial(e); else fecharEspecial(true);
 }
-window.addEventListener("hashchange", () => { if (estado.usuario) { abrirPeloEndereco(); abrirRegistroPeloEndereco(); } });
+window.addEventListener("hashchange", () => { if (estado.usuario) { abrirPeloEndereco(); abrirRegistroPeloEndereco(); abrirCadernoPeloEndereco(estado.especiais); } });
 
 function abrirEspecial(e) {
   const v = $("#espView");
@@ -671,4 +675,5 @@ document.addEventListener("keydown", (e) => {
     return;
   }
   if (e.key === "Escape" && !$("#regView").hidden) location.hash = "memorias";
+  else if (e.key === "Escape" && !$("#cadView").hidden) location.hash = "especiais";
 }, true);
