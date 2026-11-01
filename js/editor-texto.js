@@ -2,7 +2,7 @@
 // O texto continua sendo texto simples, com marcas que o site transforma em formatação (ver texto.js).
 
 const SVG_AL = (tipo) => {
-  const l = { esquerda: [[3, 21], [3, 15], [3, 19], [3, 13]], centro: [[3, 21], [6, 18], [4, 20], [7, 17]], direita: [[3, 21], [9, 21], [5, 21], [11, 21]] }[tipo];
+  const l = { esquerda: [[3, 21], [3, 15], [3, 19], [3, 13]], centro: [[3, 21], [6, 18], [4, 20], [7, 17]], direita: [[3, 21], [9, 21], [5, 21], [11, 21]], justificado: [[3, 21], [3, 21], [3, 21], [3, 13]] }[tipo];
   return `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">${l.map(([a, b], i) => `<line x1="${a}" x2="${b}" y1="${5 + i * 5}" y2="${5 + i * 5}" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`).join("")}</svg>`;
 };
 
@@ -28,7 +28,7 @@ function envolver(t, m) {
   if (!sel) { trocar(t, a, b, m + "texto" + m); t.setSelectionRange(a + m.length, a + m.length + 5); return; }
   // Vários parágrafos: marca cada um (as marcas não atravessam linhas).
   const novo = sel.split("\n").map(l => {
-    const pre = (l.match(/^\[(centro|direita)\]\s?/) || [""])[0], resto = l.slice(pre.length);
+    const pre = (l.match(/^\[(centro|direita|justificado)\]\s?/) || [""])[0], resto = l.slice(pre.length);
     return resto.trim() ? pre + m + resto + m : l;
   }).join("\n");
   trocar(t, a, b, novo); t.setSelectionRange(a, a + novo.length);
@@ -40,7 +40,7 @@ function alinhar(t, tipo) {
   const a = v.lastIndexOf("\n", s - 1) + 1;
   let b = v.indexOf("\n", e); if (b < 0) b = v.length;
   const novo = v.slice(a, b).split("\n").map(l => {
-    const sem = l.replace(/^\[(centro|direita)\]\s?/, "");
+    const sem = l.replace(/^\[(centro|direita|justificado)\]\s?/, "");
     return tipo && sem.trim() ? `[${tipo}] ${sem}` : sem;
   }).join("\n");
   trocar(t, a, b, novo); t.setSelectionRange(a, a + novo.length);
@@ -63,6 +63,7 @@ export function ligarEditor(t, opcoes) {
       <button type="button" data-al="" title="Alinhar à esquerda" aria-label="Alinhar à esquerda">${SVG_AL("esquerda")}</button>
       <button type="button" data-al="centro" title="Centralizar" aria-label="Centralizar">${SVG_AL("centro")}</button>
       <button type="button" data-al="direita" title="Alinhar à direita" aria-label="Alinhar à direita">${SVG_AL("direita")}</button>
+      <button type="button" data-al="justificado" title="Justificar" aria-label="Justificar">${SVG_AL("justificado")}</button>
       <span class="ed-sep" aria-hidden="true"></span>
       <button type="button" class="ed-txt" data-ed-previa aria-pressed="false">Prévia</button>
       <button type="button" class="ed-txt" data-ed-cheio>Tela cheia</button>
@@ -70,7 +71,7 @@ export function ligarEditor(t, opcoes) {
     </div>
     <p class="ed-ajuda small" hidden>Selecione um trecho e toque num botão. No texto, as marcas aparecem assim:
       <code>**negrito**</code>, <code>//itálico//</code>, <code>__sublinhado__</code> e <code>==destaque==</code>.
-      O alinhamento vale para o parágrafo inteiro (ou o verso) e aparece como <code>[centro]</code> ou <code>[direita]</code> no começo da linha.
+      O alinhamento vale para o parágrafo inteiro (ou o verso) e aparece como <code>[centro]</code>, <code>[direita]</code> ou <code>[justificado]</code> no começo da linha.
       Para tirar uma marca, selecione o trecho marcado e toque no mesmo botão. A <b>Prévia</b> mostra como fica no site.</p>
     <div class="ed-corpo"><div class="ed-escrita"></div><div class="ed-previa" hidden><span class="label">Prévia</span><div class="ed-previa-txt"></div></div></div>`;
   box.querySelector(".ed-escrita").append(t);

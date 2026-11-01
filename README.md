@@ -61,4 +61,4 @@ Os textos da Taís: poemas, contos, crônicas, exercícios de oficina, ensaios, 
 
 ## Formatação dos textos longos
 
-No painel, os campos de texto longo (Texto do Baú, Resumo da obra e Reflexões da Taís) têm uma barra de ferramentas com negrito, itálico, sublinhado, destaque e alinhamento, além de **Prévia** e **Tela cheia**. O texto continua simples, com marcas que o site transforma em formatação (`js/texto.js`): `**negrito**`, `//itálico//`, `__sublinhado__`, `==destaque==` e, no começo da linha, `[centro]` ou `[direita]`.
+No painel, os campos de texto longo (Texto do Baú, Resumo da obra e Reflexões da Taís) têm uma barra de ferramentas com negrito, itálico, sublinhado, destaque e alinhamento, além de **Prévia** e **Tela cheia**. O texto continua simples, com marcas que o site transforma em formatação (`js/texto.js`): `**negrito**`, `//itálico//`, `__sublinhado__`, `==destaque==` e, no começo da linha, `[centro]`, `[direita]` ou `[justificado]`.

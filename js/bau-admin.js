@@ -1,7 +1,7 @@
 // Painel: Baú da Escrita (escrever, guardar como rascunho, publicar e apagar os textos da Taís).
-import { db, esc, hojeISO } from "./firebase.js?v=20261101e";
-import { TIPOS, ORIGENS, tipoDe, origemDe, corpoHTML } from "./bau.js?v=20261101e";
-import { ligarEditor } from "./editor-texto.js?v=20261101e";
+import { db, esc, hojeISO } from "./firebase.js?v=20261101f";
+import { TIPOS, ORIGENS, tipoDe, origemDe, corpoHTML } from "./bau.js?v=20261101f";
+import { ligarEditor } from "./editor-texto.js?v=20261101f";
 import {
   doc, getDocs, setDoc, updateDoc, deleteDoc, collection, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";

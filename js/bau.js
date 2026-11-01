@@ -1,9 +1,9 @@
 // Baú da Escrita: os textos da Taís (poemas, contos, crônicas, exercícios de oficina) e os comentários das leitoras.
-import { db, esc, MESES_CAP } from "./firebase.js?v=20261101e";
+import { db, esc, MESES_CAP } from "./firebase.js?v=20261101f";
 import {
   doc, addDoc, deleteDoc, collection, query, where, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { paragrafosHTML, poemaHTML, semMarcas } from "./texto.js?v=20261101e";
+import { paragrafosHTML, poemaHTML, semMarcas } from "./texto.js?v=20261101f";
 
 const $ = (s) => document.querySelector(s);
 export const TIPOS = { poema: "Poema", conto: "Conto", cronica: "Crônica", exercicio: "Exercício de oficina", ensaio: "Ensaio", carta: "Carta", fragmento: "Fragmento", outro: "Texto" };

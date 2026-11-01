@@ -543,6 +543,7 @@ label.btn[aria-disabled="true"]{opacity:.5;pointer-events:none}
 /* ===================== formatação dos textos (texto.js) ===================== */
 .al-centro{text-align:center;text-indent:0!important}
 .al-direita{text-align:right;text-indent:0!important}
+.al-justificado{text-align:justify;hyphens:auto;-webkit-hyphens:auto}
 .verso{display:block}
 .bau-corpo.poema .verso.al-centro,.bau-corpo.poema .verso.al-direita{display:block}
 .bau-corpo u,.resumo u{text-underline-offset:3px}
