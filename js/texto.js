@@ -1,6 +1,6 @@
 // Formatação simples dos textos longos (Baú da Escrita e fichas dos cadernos).
 // **negrito**  //itálico//  __sublinhado__  ==marca-texto==   e, no começo da linha, [centro], [direita] ou [justificado].
-import { esc } from "./firebase.js?v=20261101g";
+import { esc } from "./firebase.js?v=20261101h";
 
 const ALINHA = /^\[(centro|direita|justificado)\]\s?/;
 export function formatarLinha(s) {

@@ -1,7 +1,7 @@
 // Editor visual dos textos longos do painel: a Taís vê o texto já formatado (negrito, itálico,
 // sublinhado, destaque, alinhamento), sem marcas. Por baixo, o texto é guardado na <textarea>
 // original no formato simples que o site entende (ver texto.js), então salvar, rascunho e contador seguem iguais.
-import { formatarLinha } from "./texto.js?v=20261101g";
+import { formatarLinha } from "./texto.js?v=20261101h";
 
 const SVG_AL = (tipo) => {
   const l = { esquerda: [[3, 21], [3, 15], [3, 19], [3, 13]], centro: [[3, 21], [6, 18], [4, 20], [7, 17]], direita: [[3, 21], [9, 21], [5, 21], [11, 21]], justificado: [[3, 21], [3, 21], [3, 21], [3, 13]] }[tipo];

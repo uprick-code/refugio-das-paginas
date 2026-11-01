@@ -62,3 +62,7 @@ Os textos da Taís: poemas, contos, crônicas, exercícios de oficina, ensaios, 
 ## Formatação dos textos longos
 
 No painel, os campos de texto longo (Texto do Baú, Resumo da obra e Reflexões da Taís) têm uma barra de ferramentas com negrito, itálico, sublinhado, destaque e alinhamento, além de **Prévia** e **Tela cheia**. O editor é visual: a Taís vê o texto já formatado, sem marcas. Por baixo, o texto é guardado simples, com marcas que o site transforma em formatação (`js/texto.js`): `**negrito**`, `//itálico//`, `__sublinhado__`, `==destaque==` e, no começo da linha, `[centro]`, `[direita]` ou `[justificado]`.
+
+## Ícone e rodapé
+
+O ícone do site (livro aberto) está em `favicon.svg`, com versões em PNG (`favicon-32.png`, `apple-touch-icon.png`, `icone-192.png`, `icone-512.png`) e `site.webmanifest` para quando a leitora salva o site na tela inicial do celular. O rodapé traz contato (e-mail e Instagram), o link da Comunidade do WhatsApp (só para quem entrou), o aviso de privacidade, os direitos dos textos e o botão de voltar ao topo; tudo fica em `index.html`.

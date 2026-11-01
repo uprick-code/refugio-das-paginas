@@ -4,12 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Refúgio das Páginas</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#F5F0E6">
 <meta name="description" content="Clube de leitura com curadoria e mediação de Taís Rick.">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Caveat:wght@500;700&family=Patrick+Hand+SC&family=Playfair+Display:wght@800&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Courier+Prime:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&family=Pinyon+Script&display=swap">
-<link rel="stylesheet" href="css/estilo.css?v=20261101g">
+<link rel="stylesheet" href="css/estilo.css?v=20261101h">
 </head>
 <body>
 
@@ -209,11 +214,40 @@
   </div>
 </div>
 
-<footer>
+<footer class="rodape">
   <div class="wrap">
-    <span class="brand">Refúgio das Páginas</span>
-    <span class="small" style="font-family:var(--f-type)">Curadoria e mediação de Taís Rick</span>
-    <button class="theme-btn" type="button" id="themeBtn">Alternar claro/escuro</button>
+    <div class="rod-grid">
+      <div class="rod-sobre">
+        <span class="brand">Refúgio das Páginas</span>
+        <p class="small">Clube de leitura com curadoria e mediação de Taís Rick. Encontros mensais, presenciais e híbridos.</p>
+      </div>
+      <div>
+        <h2 class="rod-tit">Fale com a gente</h2>
+        <ul class="rod-lista">
+          <li><a href="mailto:taiseibt@gmail.com">taiseibt@gmail.com</a></li>
+          <li><a href="https://www.instagram.com/taiseamauri/" target="_blank" rel="noopener">Instagram @taiseamauri ↗</a></li>
+          <li id="rodWhats" hidden><a href="https://chat.whatsapp.com/Kz6JlJsWzJF2Mfk6BtRj0d" target="_blank" rel="noopener">Comunidade no WhatsApp ↗</a></li>
+          <li class="small">Esqueceu a senha? Fale com a Taís.</li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="rod-tit">Privacidade</h2>
+        <details class="rod-priv">
+          <summary>Como cuidamos dos seus dados</summary>
+          <div class="small">
+            <p><b>O que o site guarda:</b> seu nome e usuário, as confirmações de presença, os votos, os comentários e reflexões que você escreve e as fotos dos encontros.</p>
+            <p><b>Quem vê:</b> só as leitoras do clube, com login. Seu voto, só você e a Taís. Os Especiais são abertos a todos, mas não mostram dados das leitoras.</p>
+            <p><b>Senhas:</b> ficam no sistema de login do Google (Firebase). Ninguém do clube consegue vê-las.</p>
+            <p><b>O que não fazemos:</b> não vendemos nem compartilhamos dados, não há anúncios nem rastreamento. O site usa o Firebase e as fontes do Google para funcionar, e o seu navegador guarda só preferências (como claro/escuro) e rascunhos.</p>
+            <p><b>Seus direitos:</b> para ver, corrigir ou apagar seus dados, ou tirar uma foto em que você aparece, escreva para <a href="mailto:taiseibt@gmail.com">taiseibt@gmail.com</a>.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+    <div class="rod-fim">
+      <span>© 2026 Refúgio das Páginas · Textos do Baú da Escrita e dos cadernos © Taís Rick, todos os direitos reservados · Capas dos livros: direitos das editoras</span>
+      <span class="rod-botoes"><button class="theme-btn" type="button" id="btnTopo">↑ Voltar ao topo</button><button class="theme-btn" type="button" id="themeBtn">Alternar claro/escuro</button></span>
+    </div>
   </div>
 </footer>
 
@@ -224,6 +258,6 @@
     if (c && !c.hidden) c.innerHTML = 'Não foi possível abrir esta página. Recarregue com <b>Ctrl+Shift+R</b> (no celular, feche a aba e abra de novo).<br><small style="opacity:.7">' + (e.message || "") + '</small>';
   }, true);
 </script>
-<script type="module" src="js/app.js?v=20261101g"></script>
+<script type="module" src="js/app.js?v=20261101h"></script>
 </body>
 </html>

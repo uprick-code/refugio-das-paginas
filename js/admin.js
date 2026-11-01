@@ -3,7 +3,7 @@ import {
   auth, db, firebaseConfig, onAuthStateChanged, signOut, esc, emailDe, usuarioDoEmail, isAdminEmail,
   normalizaUsuario, dataCurta, hojeISO, capaHTML, ligarTema, ADMINS, prepararCapa, prepararIlustracao, guardarCapaNoCache,
   prepararFoto, tamanhoLegivel
-} from "./firebase.js?v=20261101g";
+} from "./firebase.js?v=20261101h";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { initializeAuth, inMemoryPersistence, createUserWithEmailAndPassword, signOut as sairDe }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
@@ -11,9 +11,9 @@ import {
   doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, collection, onSnapshot, query, orderBy,
   serverTimestamp, writeBatch, where, increment
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { ACERVO_INICIAL } from "./acervo-inicial.js?v=20261101g";
-import { iniciarBauAdmin } from "./bau-admin.js?v=20261101g";
-import { abrirLivrosCaderno, apagarLivrosDoCaderno, renderImportarCadernos, sincronizarPubCadernos } from "./caderno-admin.js?v=20261101g";
+import { ACERVO_INICIAL } from "./acervo-inicial.js?v=20261101h";
+import { iniciarBauAdmin } from "./bau-admin.js?v=20261101h";
+import { abrirLivrosCaderno, apagarLivrosDoCaderno, renderImportarCadernos, sincronizarPubCadernos } from "./caderno-admin.js?v=20261101h";
 
 const $ = (s) => document.querySelector(s);
 ligarTema($("#themeBtn"));

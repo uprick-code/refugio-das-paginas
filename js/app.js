@@ -2,10 +2,10 @@
 import {
   auth, db, entrar, trocarSenha, onAuthStateChanged, signOut, esc, usuarioDoEmail, isAdminEmail,
   dataExtenso, dataCurta, hojeISO, diasAte, parseData, MESES_CAP, capaHTML, ligarTema
-} from "./firebase.js?v=20261101g";
-import { enfeitarRosto, planta } from "./ornamentos.js?v=20261101g";
-import { iniciarBau, pararBau, abrirTextoPeloEndereco } from "./bau.js?v=20261101g";
-import { cardCaderno, pintarCartoes, abrirCadernoPeloEndereco, fecharCaderno, contextoCaderno } from "./caderno.js?v=20261101g";
+} from "./firebase.js?v=20261101h";
+import { enfeitarRosto, planta } from "./ornamentos.js?v=20261101h";
+import { iniciarBau, pararBau, abrirTextoPeloEndereco } from "./bau.js?v=20261101h";
+import { cardCaderno, pintarCartoes, abrirCadernoPeloEndereco, fecharCaderno, contextoCaderno } from "./caderno.js?v=20261101h";
 import {
   doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -16,6 +16,7 @@ const TRECHOS = ["Sem spoiler", "Até a metade", "Livro inteiro"];
 
 enfeitarRosto();
 ligarTema($("#themeBtn"));
+$("#btnTopo").addEventListener("click", () => { window.scrollTo({ top: 0, behavior: "smooth" }); $(".brand")?.focus({ preventScroll: true }); });
 
 const estado = {
   usuario: null, admin: false,
@@ -121,7 +122,7 @@ function pararTudo() {
 onAuthStateChanged(auth, async (user) => {
   pararTudo();
   if (!user) {
-    estado.usuario = null; estado.admin = false;
+    estado.usuario = null; estado.admin = false; $("#rodWhats").hidden = true;
     contextoCaderno({ usuario: null, admin: false, nomeDe: (x) => x });
     mostrar("login"); carregarPublico(); return;
   }
@@ -149,6 +150,7 @@ onAuthStateChanged(auth, async (user) => {
     $("#nomeMenu").textContent = m.nome;
     $("#saudacao").textContent = `Que bom te ver por aqui, ${m.nome}.`;
     $("#linkPainel").hidden = !admin; $("#linkPainelTopo").hidden = !admin;
+    $("#rodWhats").hidden = false;
     if (m.trocarSenha) abrirTrocaSenha(false); else $("#modalSenha").hidden = true;
     mostrar("app");
     ouvir();
