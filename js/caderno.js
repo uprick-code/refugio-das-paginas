@@ -1,6 +1,6 @@
 // Caderno de leitura: um formato dos Especiais inspirado nos cadernos da Taís.
 // Abertura, coleção de livros, ficha de cada livro, reflexões das leitoras e imagem para redes sociais.
-import { db, esc, capaHTML } from "./firebase.js?v=20261031e";
+import { db, esc, capaHTML } from "./firebase.js?v=20261101a";
 import {
   doc, getDoc, getDocs, addDoc, deleteDoc, collection, query, where, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -246,6 +246,29 @@ async function copiarLink(botao, hash, rotulo) {
 function resumoHTML(t) {
   return String(t || "").split("\n").map(s => s.trim()).filter(Boolean).map(p => `<p>${esc(p).replace(/==(.+?)==/g, "<mark>$1</mark>")}</p>`).join("");
 }
+// Textos longos aparecem recolhidos (10 linhas do caderno) com "Continuar lendo"; abertos, ganham "Recolher".
+function recolherTextosLongos(raiz) {
+  // Mede só quando a ficha já está visível (ao abrir pelo link ela ainda pode estar escondida).
+  raiz.querySelectorAll(".texto-longo").forEach(box => {
+    const ro = new ResizeObserver(() => { if (!box.clientHeight) return; ro.disconnect(); avaliarTextoLongo(box); });
+    ro.observe(box);
+  });
+}
+function avaliarTextoLongo(box) {
+  {
+    if (box.scrollHeight <= box.clientHeight + 40) { box.classList.add("inteiro"); return; }
+    box.classList.add("recolhido");
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "btn mini ler-mais"; b.textContent = "Continuar lendo ↓"; b.setAttribute("aria-expanded", "false");
+    b.addEventListener("click", () => {
+      const abrir = box.classList.contains("recolhido");
+      box.classList.toggle("recolhido", !abrir); box.classList.toggle("aberto", abrir);
+      b.textContent = abrir ? "Recolher ↑" : "Continuar lendo ↓"; b.setAttribute("aria-expanded", String(abrir));
+      if (!abrir) box.previousElementSibling?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    box.after(b);
+  }
+}
 function campo(k, v) { return `<li><span class="k">${k}:</span><span class="v ${v ? "" : "vazio"}">${v ? esc(v) : "…"}</span></li>`; }
 function abrirFicha(id, rolar) {
   const i = C.livros.findIndex(l => l.id === id); if (i < 0) return;
@@ -269,7 +292,9 @@ function abrirFicha(id, rolar) {
             ${campo("Início em", l.inicio)}${campo("Término em", l.termino)}
             ${e.usaEstrelas !== false ? `<li><span class="k">Avaliação:</span><span class="v aval">${l.nota ? "★".repeat(l.nota) : '<span class="vazio">…</span>'}</span></li>` : ""}
           </ul></div>
-        ${l.resumo ? `<p class="resumo-tit">${marcador} Resumo da obra:</p><div class="resumo">${resumoHTML(l.resumo)}</div>`
+        ${l.resumo ? `<p class="resumo-tit">${marcador} Resumo da obra:</p><div class="resumo texto-longo">${resumoHTML(l.resumo)}</div>` : ""}
+        ${l.reflexao ? `<p class="resumo-tit">${marcador} Reflexões da Taís:</p><div class="resumo texto-longo">${resumoHTML(l.reflexao)}</div>` : ""}
+        ${l.resumo || l.reflexao ? ""
           : preenchida ? `<p class="na-fila">${marcador} Resumo da obra: a Taís está lendo este livro. O resumo chega quando ela terminar.</p>`
           : `<p class="na-fila">Este livro está na fila do caderno. Quando a Taís começar a leitura, a ficha se preenche aqui.</p>`}
       </article>
@@ -292,6 +317,7 @@ function abrirFicha(id, rolar) {
       <div><span class="label">Reflexões das leitoras</span><ul class="lista-ref" id="cadListaRef"></ul></div>
     </div>`;
   pintarCapas(sec);
+  recolherTextosLongos(sec);
   $("#cadAnt").addEventListener("click", () => irPara(i - 1));
   $("#cadProx").addEventListener("click", () => irPara(i + 1));
   $("#cadShareLivro").addEventListener("click", () => abrirShare(null));

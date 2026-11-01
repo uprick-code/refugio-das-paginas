@@ -1,7 +1,7 @@
 // Painel: livros de um caderno de leitura (lista, títulos em lote, ficha com capa e ilustração)
 // e a importação dos dois cadernos da Taís.
-import { db, esc, capaHTML, prepararCapa, prepararIlustracao, guardarCapaNoCache } from "./firebase.js?v=20261031e";
-import { desenharCapa, temaDe } from "./caderno.js?v=20261031e";
+import { db, esc, capaHTML, prepararCapa, prepararIlustracao, guardarCapaNoCache } from "./firebase.js?v=20261101a";
+import { desenharCapa, temaDe } from "./caderno.js?v=20261101a";
 import {
   doc, getDocs, setDoc, deleteDoc, collection, query, where, onSnapshot, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -51,7 +51,7 @@ function renderLista() {
   tb.innerHTML = A.livros.length ? A.livros.map((l, i) => `<tr>
     <td style="font-family:var(--f-type)">${i + 1}</td>
     <td style="width:52px">${miniAdmin(l)}</td>
-    <td><b style="font-family:var(--f-display);font-size:17px">${esc(l.titulo)}</b>${l.resumo ? `<br><span class="small">com resumo</span>` : ""}</td>
+    <td><b style="font-family:var(--f-display);font-size:17px">${esc(l.titulo)}</b>${l.resumo || l.reflexao ? `<br><span class="small">${[l.resumo ? "com resumo" : "", l.reflexao ? "com reflexão" : ""].filter(Boolean).join(" · ")}</span>` : ""}</td>
     <td><span class="chip ${l.status === "lido" ? "verde" : l.status === "lendo" ? "rosa" : ""}">${STATUS[l.status] || "na fila"}</span>${l.nota ? `<br><span style="color:var(--gold)">${"★".repeat(l.nota)}</span>` : ""}</td>
     <td><div class="acoes">
       <button class="btn mini solid" type="button" data-edlivro="${esc(l.id)}">Ficha</button>
@@ -108,7 +108,23 @@ export async function apagarLivrosDoCaderno(cadId) {
 }
 
 /* ---------- ficha de um livro ---------- */
-const chaveRascunho = (id) => "refugio-rascunho-resumo-" + id;
+const chaveRascunho = (id, campo = "resumo") => `refugio-rascunho-${campo}-${id}`;
+const MAX_TEXTO = 12000;
+// Caixa de texto longo: cresce com o texto até 60% da tela, depois rola por dentro; mostra o tamanho e guarda rascunho no aparelho.
+function ligarTextoLongo(campo, id, salvo, nome) {
+  const t = $("#" + campo.el), cont = $("#" + campo.el + "Cont");
+  let rasc = null; try { rasc = localStorage.getItem(chaveRascunho(id, campo.chave)); } catch (e) {}
+  const recuperou = rasc !== null && rasc !== (salvo || "");
+  t.value = recuperou ? rasc : (salvo || "");
+  const ajustar = () => {
+    t.style.height = "auto";
+    t.style.height = Math.min(Math.max(t.scrollHeight + 2, 180), Math.round(innerHeight * .6)) + "px";
+    cont.textContent = `${t.value.length.toLocaleString("pt-BR")} de ${MAX_TEXTO.toLocaleString("pt-BR")} caracteres`;
+  };
+  t.addEventListener("input", () => { ajustar(); try { localStorage.setItem(chaveRascunho(id, campo.chave), t.value); } catch (e) {} });
+  requestAnimationFrame(ajustar);
+  return recuperou ? nome : "";
+}
 function abrirFicha(id) {
   const l = A.livros.find(x => x.id === id); if (!l) return;
   A.edit = id; A.capaNova = null; A.tirarCapa = false; A.ilusNova = null; A.tirarIlus = false;
@@ -131,8 +147,12 @@ function abrirFicha(id) {
       <div class="field"><label for="cfTermino">Término em</label><input type="text" id="cfTermino" maxlength="10" placeholder="05/09/2026"></div></div>
     ${estrelas ? `<div class="field"><label for="cfNota">Avaliação</label><select id="cfNota"><option value="0">Sem avaliação</option>${[1, 2, 3, 4, 5].map(n => `<option value="${n}">${"★".repeat(n)}</option>`).join("")}</select></div>` : ""}
     <div class="field"><label for="cfResumo">Resumo da obra</label>
-      <textarea id="cfResumo" rows="10" maxlength="12000" placeholder="Um parágrafo por linha."></textarea>
-      <span class="small">Para marca-texto, escreva entre sinais de igual duplos: ==psicopolítica==. O que você digita fica guardado neste aparelho até salvar.</span>
+      <textarea id="cfResumo" class="texto-longo-ed" rows="6" maxlength="12000" placeholder="Um parágrafo por linha."></textarea>
+      <span class="small contador" id="cfResumoCont"></span></div>
+    <div class="field"><label for="cfReflexao">Reflexões da Taís</label>
+      <textarea id="cfReflexao" class="texto-longo-ed" rows="6" maxlength="12000" placeholder="O que o livro deixou em você. Um parágrafo por linha."></textarea>
+      <span class="small contador" id="cfReflexaoCont"></span>
+      <span class="small">Nos dois campos, para marca-texto escreva entre sinais de igual duplos: ==psicopolítica==. O que você digita fica guardado neste aparelho até salvar.</span>
       <span class="small ok" id="cfRascunho" role="status"></span></div>
     <div class="linha">
       <div class="field"><span class="lbl">Capa</span><div class="capa-envio"><div class="capa-previa" id="cfCapaPrev"></div>
@@ -151,10 +171,9 @@ function abrirFicha(id) {
   $("#cfTitulo").value = l.titulo || ""; $("#cfSubtitulo").value = l.subtitulo || ""; $("#cfEditora").value = l.editora || "";
   $("#cfPublicacao").value = l.publicacao || ""; $("#cfPaginas").value = l.paginas || ""; $("#cfStatus").value = l.status || "fila";
   $("#cfInicio").value = l.inicio || ""; $("#cfTermino").value = l.termino || ""; if (estrelas) $("#cfNota").value = String(l.nota || 0);
-  let rasc = null; try { rasc = localStorage.getItem(chaveRascunho(id)); } catch (e) {}
-  $("#cfResumo").value = rasc !== null && rasc !== (l.resumo || "") ? rasc : (l.resumo || "");
-  if (rasc !== null && rasc !== (l.resumo || "")) $("#cfRascunho").textContent = "Recuperei um rascunho do resumo que ainda não tinha sido salvo.";
-  $("#cfResumo").addEventListener("input", () => { try { localStorage.setItem(chaveRascunho(id), $("#cfResumo").value); } catch (e) {} });
+  const recuperados = [ligarTextoLongo({ el: "cfResumo", chave: "resumo" }, id, l.resumo, "do resumo"),
+    ligarTextoLongo({ el: "cfReflexao", chave: "reflexao" }, id, l.reflexao, "das reflexões")].filter(Boolean);
+  if (recuperados.length) $("#cfRascunho").textContent = `Recuperei um rascunho ${recuperados.join(" e ")} que ainda não tinha sido salvo.`;
   previas(l);
   $("#cadFichaFechar").addEventListener("click", fecharFicha);
   $("#cfCapaArq").addEventListener("change", async (e) => { const a = e.target.files[0]; e.target.value = ""; if (!a) return;
@@ -186,7 +205,7 @@ async function salvarFicha(ev) {
   const dados = {
     titulo: $("#cfTitulo").value.trim().slice(0, 120), subtitulo: $("#cfSubtitulo").value.trim(), editora: $("#cfEditora").value.trim(),
     publicacao: $("#cfPublicacao").value.trim(), paginas: $("#cfPaginas").value.trim(), status: $("#cfStatus").value,
-    inicio: $("#cfInicio").value.trim(), termino: $("#cfTermino").value.trim(), resumo: $("#cfResumo").value.trim(),
+    inicio: $("#cfInicio").value.trim(), termino: $("#cfTermino").value.trim(), resumo: $("#cfResumo").value.trim(), reflexao: $("#cfReflexao").value.trim(),
     nota: $("#cfNota") ? Number($("#cfNota").value) : 0
   };
   try {
@@ -195,7 +214,7 @@ async function salvarFicha(ev) {
     if (A.ilusNova) { const v = Date.now(); await setDoc(doc(db, "capas", "cli_" + id), { img: A.ilusNova }); Object.assign(dados, { ilusDb: true, ilusV: v }); guardarCapaNoCache("cli_" + id, v, A.ilusNova); }
     else if (A.tirarIlus) { await deleteDoc(doc(db, "capas", "cli_" + id)).catch(() => {}); Object.assign(dados, { ilusDb: false, ilusPadrao: "" }); }
     await setDoc(doc(db, "cadernoLivros", id), dados, { merge: true });
-    try { localStorage.removeItem(chaveRascunho(id)); } catch (e) {}
+    try { localStorage.removeItem(chaveRascunho(id)); localStorage.removeItem(chaveRascunho(id, "reflexao")); } catch (e) {}
     A.capaNova = null; A.ilusNova = null; A.tirarCapa = false; A.tirarIlus = false;
     $("#cfRascunho").textContent = ""; $("#cfOk").textContent = "Ficha salva.";
   } catch (err) { console.error(err); $("#cfErro").textContent = "Não foi possível salvar a ficha. Confira se as regras novas já foram publicadas no Firebase."; }
