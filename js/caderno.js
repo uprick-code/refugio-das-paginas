@@ -1,10 +1,10 @@
 // Caderno de leitura: um formato dos Especiais inspirado nos cadernos da Taís.
 // Abertura, coleção de livros, ficha de cada livro, reflexões das leitoras e imagem para redes sociais.
-import { db, esc, capaHTML } from "./firebase.js?v=20261101f";
+import { db, esc, capaHTML } from "./firebase.js?v=20261101g";
 import {
   doc, getDoc, getDocs, addDoc, deleteDoc, collection, query, where, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { paragrafosHTML, semMarcas } from "./texto.js?v=20261101f";
+import { paragrafosHTML, semMarcas } from "./texto.js?v=20261101g";
 
 /* ================= temas ================= */
 export const TEMAS = {
