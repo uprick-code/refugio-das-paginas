@@ -1,9 +1,10 @@
 // Caderno de leitura: um formato dos Especiais inspirado nos cadernos da Taís.
 // Abertura, coleção de livros, ficha de cada livro, reflexões das leitoras e imagem para redes sociais.
-import { db, esc, capaHTML } from "./firebase.js?v=20261101c";
+import { db, esc, capaHTML } from "./firebase.js?v=20261101e";
 import {
   doc, getDoc, getDocs, addDoc, deleteDoc, collection, query, where, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { paragrafosHTML, semMarcas } from "./texto.js?v=20261101e";
 
 /* ================= temas ================= */
 export const TEMAS = {
@@ -245,9 +246,7 @@ async function copiarLink(botao, hash, rotulo) {
 }
 
 /* ================= ficha ================= */
-function resumoHTML(t) {
-  return String(t || "").split("\n").map(s => s.trim()).filter(Boolean).map(p => `<p>${esc(p).replace(/==(.+?)==/g, "<mark>$1</mark>")}</p>`).join("");
-}
+const resumoHTML = paragrafosHTML;
 // Textos longos aparecem recolhidos (10 linhas do caderno) com "Continuar lendo"; abertos, ganham "Recolher".
 function recolherTextosLongos(raiz) {
   // Mede só quando a ficha já está visível (ao abrir pelo link ela ainda pode estar escondida).
@@ -509,7 +508,7 @@ async function gerarImagem() {
   const ultima = Math.floor((H - m - 150 - topo) / R);
   const marc = tema === "campo" ? "❀" : "★";
   const blocos = [];
-  if ((cont === "ficha" || cont === "ambos") && l.resumo) blocos.push({ rot: `${marc} Resumo da obra`, txt: l.resumo.replace(/==/g, ""), fonte: '"Lora", serif', tam: 30 });
+  if ((cont === "ficha" || cont === "ambos") && l.resumo) blocos.push({ rot: `${marc} Resumo da obra`, txt: semMarcas(l.resumo), fonte: '"Lora", serif', tam: 30 });
   if ((cont === "reflexao" || cont === "ambos") && ref) blocos.push({ rot: `${marc} Reflexão de uma leitora`, txt: `“${ref.texto}”`, fonte: '"Caveat", cursive', tam: cont === "reflexao" ? 52 : 42 });
   for (const b of blocos) {
     if (n > ultima - 1) break;

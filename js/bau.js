@@ -1,8 +1,9 @@
 // Baú da Escrita: os textos da Taís (poemas, contos, crônicas, exercícios de oficina) e os comentários das leitoras.
-import { db, esc, MESES_CAP } from "./firebase.js?v=20261101c";
+import { db, esc, MESES_CAP } from "./firebase.js?v=20261101e";
 import {
   doc, addDoc, deleteDoc, collection, query, where, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { paragrafosHTML, poemaHTML, semMarcas } from "./texto.js?v=20261101e";
 
 const $ = (s) => document.querySelector(s);
 export const TIPOS = { poema: "Poema", conto: "Conto", cronica: "Crônica", exercicio: "Exercício de oficina", ensaio: "Ensaio", carta: "Carta", fragmento: "Fragmento", outro: "Texto" };
@@ -24,16 +25,12 @@ function dataTexto(iso) {
   const [a, m, d] = (iso || "").split("-").map(Number);
   return d ? `${d} de ${MESES[m - 1]} de ${a}` : mesAno(iso);
 }
-// Poemas guardam as quebras de verso e as estrofes (linha em branco); a prosa vira parágrafos.
+// Poemas guardam as quebras de verso e as estrofes (linha em branco); a prosa vira parágrafos. Formatação em texto.js.
 export function corpoHTML(t) {
-  const marca = (s) => esc(s).replace(/==(.+?)==/g, "<mark>$1</mark>");
-  const txt = String(t.texto || "").replace(/\r/g, "");
-  if (t.tipo === "poema") return txt.split(/\n\s*\n/).map(e => e.trim()).filter(Boolean)
-    .map(e => `<p class="estrofe">${e.split("\n").map(marca).join("<br>")}</p>`).join("");
-  return txt.split("\n").map(s => s.trim()).filter(Boolean).map(p => `<p>${marca(p)}</p>`).join("");
+  return t.tipo === "poema" ? poemaHTML(t.texto) : paragrafosHTML(t.texto);
 }
 function trecho(t) {
-  const s = String(t.texto || "").replace(/==/g, "").replace(/\s*\n\s*/g, t.tipo === "poema" ? " / " : " ").trim();
+  const s = semMarcas(t.texto).replace(/\s*\n\s*/g, t.tipo === "poema" ? " / " : " ").trim();
   return s.length > 170 ? s.slice(0, 170).replace(/\s+\S*$/, "") + "…" : s;
 }
 

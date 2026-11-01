@@ -1,6 +1,7 @@
 // Painel: Baú da Escrita (escrever, guardar como rascunho, publicar e apagar os textos da Taís).
-import { db, esc, hojeISO } from "./firebase.js?v=20261101c";
-import { TIPOS, ORIGENS, tipoDe, origemDe } from "./bau.js?v=20261101c";
+import { db, esc, hojeISO } from "./firebase.js?v=20261101e";
+import { TIPOS, ORIGENS, tipoDe, origemDe, corpoHTML } from "./bau.js?v=20261101e";
+import { ligarEditor } from "./editor-texto.js?v=20261101e";
 import {
   doc, getDocs, setDoc, updateDoc, deleteDoc, collection, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -13,7 +14,7 @@ const opcoes = (obj) => Object.entries(obj).map(([k, v]) => `<option value="${k}
 
 export function iniciarBauAdmin() {
   const box = $("#bauAdmin");
-  box.innerHTML = `<div class="painel-grid">
+  box.innerHTML = `<div class="painel-grid bau-adm">
     <div class="caixa">
       <h3 id="bzTituloForm">Novo texto</h3>
       <form id="formBau" autocomplete="off">
@@ -29,7 +30,7 @@ export function iniciarBauAdmin() {
         <div class="field"><label for="bzTexto">Texto</label>
           <textarea id="bzTexto" class="texto-longo-ed" rows="8" maxlength="${MAX}" required placeholder="Na prosa, um parágrafo por linha. No poema, um verso por linha e uma linha em branco entre as estrofes."></textarea>
           <span class="small contador" id="bzTextoCont"></span>
-          <span class="small">Para marca-texto, escreva entre sinais de igual duplos: ==assim==. O que você digita fica guardado neste aparelho até salvar.</span>
+          <span class="small">Selecione um trecho e use a barra para negrito, itálico, sublinhado, destaque e alinhamento. O que você digita fica guardado neste aparelho até salvar.</span>
           <span class="small ok" id="bzRascunho" role="status"></span></div>
         <div class="checks"><label><input type="checkbox" id="bzPublicado"> Publicado (as leitoras já veem)</label></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -43,6 +44,11 @@ export function iniciarBauAdmin() {
     <div>
       <div class="tabela-wrap"><table><thead><tr><th>Texto</th><th>Situação</th><th></th></tr></thead><tbody id="tBau"></tbody></table></div>
     </div></div>`;
+  T.editor = ligarEditor($("#bzTexto"), {
+    render: (txt) => corpoHTML({ tipo: $("#bzTipo").value, texto: txt }),
+    classe: () => "bau-corpo " + ($("#bzTipo").value === "poema" ? "poema" : "prosa")
+  });
+  $("#bzTipo").addEventListener("change", () => T.editor.atualizar());
   limpar();
   $("#bzTexto").addEventListener("input", () => { ajustar(); try { localStorage.setItem(chave(T.edit), $("#bzTexto").value); } catch (e) {} });
   $("#bzCancelar").addEventListener("click", limpar);
@@ -93,7 +99,7 @@ function idDe(titulo) {
   return id;
 }
 async function salvar(ev) {
-  ev.preventDefault();
+  ev.preventDefault(); T.editor?.sair();
   $("#bzErro").textContent = ""; $("#bzOk").textContent = "";
   const titulo = $("#bzTitulo").value.trim(), texto = $("#bzTexto").value.replace(/\s+$/, "");
   if (!titulo || !texto.trim()) { $("#bzErro").textContent = "Escreva o título e o texto."; return; }

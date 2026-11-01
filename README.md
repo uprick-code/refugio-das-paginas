@@ -58,3 +58,7 @@ O GitHub Pages deixa os arquivos guardados no navegador por até 10 minutos. Par
 ## Baú da Escrita
 
 Os textos da Taís: poemas, contos, crônicas, exercícios de oficina, ensaios, cartas e fragmentos, com a origem (autoral, curso, oficina ou encontro do clube). No painel, aba **Baú da Escrita**: título, tipo, data, de onde veio, uma linha de contexto ("Sobre este texto") e o texto, que pode ser guardado como rascunho ou publicado. Nos poemas, cada linha é um verso e uma linha em branco separa as estrofes; na prosa, cada linha é um parágrafo. As leitoras veem só os publicados (menu **Baú da Escrita**) e podem comentar. Dados na coleção `bau`, com a subcoleção `comentarios`. Apagar um texto apaga também os comentários.
+
+## Formatação dos textos longos
+
+No painel, os campos de texto longo (Texto do Baú, Resumo da obra e Reflexões da Taís) têm uma barra de ferramentas com negrito, itálico, sublinhado, destaque e alinhamento, além de **Prévia** e **Tela cheia**. O texto continua simples, com marcas que o site transforma em formatação (`js/texto.js`): `**negrito**`, `//itálico//`, `__sublinhado__`, `==destaque==` e, no começo da linha, `[centro]` ou `[direita]`.

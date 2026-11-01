@@ -1,7 +1,9 @@
 // Painel: livros de um caderno de leitura (lista, títulos em lote, ficha com capa e ilustração)
 // e a importação dos dois cadernos da Taís.
-import { db, esc, capaHTML, prepararCapa, prepararIlustracao, guardarCapaNoCache } from "./firebase.js?v=20261101c";
-import { desenharCapa, temaDe } from "./caderno.js?v=20261101c";
+import { db, esc, capaHTML, prepararCapa, prepararIlustracao, guardarCapaNoCache } from "./firebase.js?v=20261101e";
+import { desenharCapa, temaDe } from "./caderno.js?v=20261101e";
+import { ligarEditor } from "./editor-texto.js?v=20261101e";
+import { paragrafosHTML } from "./texto.js?v=20261101e";
 import {
   doc, getDocs, setDoc, deleteDoc, collection, query, where, onSnapshot, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -170,7 +172,7 @@ function abrirFicha(id) {
     <div class="field"><label for="cfReflexao">Reflexões da Taís</label>
       <textarea id="cfReflexao" class="texto-longo-ed" rows="6" maxlength="12000" placeholder="O que o livro deixou em você. Um parágrafo por linha."></textarea>
       <span class="small contador" id="cfReflexaoCont"></span>
-      <span class="small">Nos dois campos, para marca-texto escreva entre sinais de igual duplos: ==psicopolítica==. O que você digita fica guardado neste aparelho até salvar.</span>
+      <span class="small">Nos dois campos, selecione um trecho e use a barra para negrito, itálico, sublinhado, destaque e alinhamento. O que você digita fica guardado neste aparelho até salvar.</span>
       <span class="small ok" id="cfRascunho" role="status"></span></div>
     <div class="linha">
       <div class="field"><span class="lbl">Capa</span><div class="capa-envio"><div class="capa-previa" id="cfCapaPrev"></div>
@@ -189,6 +191,7 @@ function abrirFicha(id) {
   $("#cfTitulo").value = l.titulo || ""; $("#cfSubtitulo").value = l.subtitulo || ""; $("#cfEditora").value = l.editora || "";
   $("#cfPublicacao").value = l.publicacao || ""; $("#cfPaginas").value = l.paginas || ""; $("#cfStatus").value = l.status || "fila";
   $("#cfInicio").value = l.inicio || ""; $("#cfTermino").value = l.termino || ""; if (estrelas) $("#cfNota").value = String(l.nota || 0);
+  for (const el of ["#cfResumo", "#cfReflexao"]) ligarEditor($(el), { render: paragrafosHTML, classe: () => "resumo" });
   const recuperados = [ligarTextoLongo({ el: "cfResumo", chave: "resumo" }, id, l.resumo, "do resumo"),
     ligarTextoLongo({ el: "cfReflexao", chave: "reflexao" }, id, l.reflexao, "das reflexões")].filter(Boolean);
   if (recuperados.length) $("#cfRascunho").textContent = `Recuperei um rascunho ${recuperados.join(" e ")} que ainda não tinha sido salvo.`;
