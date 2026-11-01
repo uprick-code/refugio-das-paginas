@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Caveat:wght@500;700&family=Patrick+Hand+SC&family=Playfair+Display:wght@800&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Courier+Prime:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&family=Pinyon+Script&display=swap">
-<link rel="stylesheet" href="css/estilo.css?v=20261101a">
+<link rel="stylesheet" href="css/estilo.css?v=20261101b">
 </head>
 <body>
 
@@ -28,6 +28,7 @@
       <a href="#calendario">Calendário</a>
       <a href="#estante">Estante</a>
       <a href="#memorias" id="linkMemorias" hidden>Memórias</a>
+      <a href="#bau" id="linkBau" hidden>Baú da Escrita</a>
       <a href="#como-funciona">Combinados</a>
       <a href="admin.html" id="linkPainel" hidden>Painel da Taís</a>
       <div class="menu-conta"><span id="nomeMenu"></span><span style="display:flex;gap:16px"><button class="linkbtn" type="button" data-trocar-senha>Trocar senha</button><button class="linkbtn" type="button" id="btnSairMenu">Sair</button></span></div>
@@ -129,6 +130,17 @@
   </div></section>
   </div>
 
+  <div id="bauBloco" hidden>
+  <div class="washi" aria-hidden="true"></div>
+  <section id="bau"><div class="wrap">
+    <div class="sec-head bau-head">
+      <svg class="bau-icone" viewBox="0 0 64 52" aria-hidden="true"><path d="M6 22h52v26H6z" fill="var(--wood)"/><path d="M6 22c0-12 10-18 26-18s26 6 26 18z" fill="color-mix(in srgb,var(--wood) 80%,#000)"/><path d="M6 22h52M6 30h52" stroke="var(--gold)" stroke-width="2.5"/><path d="M14 6v42M50 6v42" stroke="var(--gold)" stroke-width="2.5" opacity=".9"/><rect x="27" y="25" width="10" height="12" rx="2" fill="var(--gold)"/><circle cx="32" cy="30" r="1.8" fill="var(--wood)"/></svg>
+      <span class="label">Baú da Escrita</span><h2>Textos guardados com carinho</h2>
+      <p>Poemas, contos, crônicas e exercícios que a Taís escreveu nos cursos, nas oficinas, nos encontros do clube e por conta própria.</p></div>
+    <div class="bau-grid" id="bauGrid"></div>
+  </div></section>
+  </div>
+
   <div class="washi alt" aria-hidden="true"></div>
 
   <section id="como-funciona"><div class="wrap">
@@ -154,6 +166,9 @@
 
 <!-- CADERNO DE LEITURA -->
 <div class="esp-view cad-view" id="cadView" hidden role="dialog" aria-modal="true" aria-label="Caderno de leitura"></div>
+
+<!-- TEXTO DO BAÚ DA ESCRITA -->
+<div class="esp-view bau-view" id="bauView" hidden role="dialog" aria-modal="true" aria-labelledby="bauTitulo"></div>
 
 <!-- REGISTRO DE UM ENCONTRO -->
 <div class="esp-view" id="regView" hidden role="dialog" aria-modal="true" aria-labelledby="regTitulo"></div>
@@ -201,6 +216,6 @@
     if (c && !c.hidden) c.innerHTML = 'Não foi possível abrir esta página. Recarregue com <b>Ctrl+Shift+R</b> (no celular, feche a aba e abra de novo).<br><small style="opacity:.7">' + (e.message || "") + '</small>';
   }, true);
 </script>
-<script type="module" src="js/app.js?v=20261101a"></script>
+<script type="module" src="js/app.js?v=20261101b"></script>
 </body>
 </html>

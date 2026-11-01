@@ -490,3 +490,33 @@ label.btn[aria-disabled="true"]{opacity:.5;pointer-events:none}
 }
 .painel-topo{font-family:var(--f-type);font-size:12.5px;font-weight:700;color:var(--paper);background:var(--rose-ink);padding:5px 10px;border-radius:2px;text-decoration:none;white-space:nowrap}
 .painel-topo:hover{background:var(--ink)}
+
+/* ===================== baú da escrita ===================== */
+.bau-head{position:relative}
+.bau-icone{width:58px;height:48px;margin-bottom:4px}
+.bau-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px}
+.bau-card{--cor:var(--wood);display:grid;gap:8px;align-content:start;text-decoration:none;color:var(--ink);background:var(--ruled);
+  background-image:repeating-linear-gradient(to bottom,transparent 0 29px,var(--rule) 29px 30px);background-position:0 54px;
+  border:1px solid var(--line);border-top:5px solid var(--cor);padding:16px 18px 18px;box-shadow:3px 4px 0 -1px var(--paper-2),3px 4px 0 0 var(--line);transition:transform .15s}
+.bau-card:nth-child(3n+1){transform:rotate(-.5deg)}.bau-card:nth-child(3n+2){transform:rotate(.4deg)}
+.bau-card:hover{transform:translateY(-3px)}
+.bau-card.tipo-poema{--cor:var(--rose-ink)}.bau-card.tipo-conto{--cor:var(--sage)}.bau-card.tipo-cronica{--cor:var(--gold)}.bau-card.tipo-exercicio{--cor:#5B6C8F}
+.bau-card h3{font-size:27px}
+.bau-trecho{font-family:var(--f-hand);font-size:21px;line-height:30px;color:var(--ink-soft);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.bau-ler{font-family:var(--f-type);font-size:13px;color:var(--rose-ink);justify-self:end}
+@media (prefers-reduced-motion: reduce){.bau-card,.bau-card:nth-child(n){transform:none}}
+.bau-artigo{max-width:760px}
+.bau-folha{background:var(--ruled);border:1px solid var(--line);padding:44px clamp(20px,6vw,64px) 40px;box-shadow:4px 6px 0 -1px var(--paper-2),4px 6px 0 0 var(--line);display:grid;gap:22px}
+.bau-folha header{text-align:center;display:grid;gap:8px;justify-items:center}
+.bau-folha h1{font-size:clamp(34px,6vw,48px)}
+.bau-sobre{font-style:italic;color:var(--ink-soft);border-left:3px solid var(--rose);padding-left:14px;max-width:60ch}
+.bau-corpo{font-size:18px;line-height:1.85}
+.bau-corpo.prosa p{text-indent:2em;margin-bottom:.5em}
+.bau-corpo.poema{justify-self:center;max-width:100%}
+.bau-corpo.poema .estrofe{margin-bottom:1.3em;overflow-wrap:anywhere}
+.bau-corpo mark{background:linear-gradient(transparent 20%,var(--hl) 20%,var(--hl) 85%,transparent 85%);color:inherit;padding:0 2px}
+.bau-assinatura{font-family:var(--f-script);font-size:36px;color:var(--rose-ink);justify-self:end;line-height:1}
+.bau-comentarios{margin-top:40px;display:grid;gap:14px}
+.bau-comentarios h2{font-size:30px;font-weight:500}
+.bau-comentarios .caixa{gap:10px}
+#bauAdmin input:not([type=checkbox]),#bauAdmin select{min-width:0;max-width:100%;width:100%}

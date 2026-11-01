@@ -3,7 +3,7 @@ import {
   auth, db, firebaseConfig, onAuthStateChanged, signOut, esc, emailDe, usuarioDoEmail, isAdminEmail,
   normalizaUsuario, dataCurta, hojeISO, capaHTML, ligarTema, ADMINS, prepararCapa, prepararIlustracao, guardarCapaNoCache,
   prepararFoto, tamanhoLegivel
-} from "./firebase.js?v=20261101a";
+} from "./firebase.js?v=20261101b";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { initializeAuth, inMemoryPersistence, createUserWithEmailAndPassword, signOut as sairDe }
   from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
@@ -11,8 +11,9 @@ import {
   doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, collection, onSnapshot, query, orderBy,
   serverTimestamp, writeBatch, where, increment
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { ACERVO_INICIAL } from "./acervo-inicial.js?v=20261101a";
-import { abrirLivrosCaderno, apagarLivrosDoCaderno, renderImportarCadernos } from "./caderno-admin.js?v=20261101a";
+import { ACERVO_INICIAL } from "./acervo-inicial.js?v=20261101b";
+import { iniciarBauAdmin } from "./bau-admin.js?v=20261101b";
+import { abrirLivrosCaderno, apagarLivrosDoCaderno, renderImportarCadernos } from "./caderno-admin.js?v=20261101b";
 
 const $ = (s) => document.querySelector(s);
 ligarTema($("#themeBtn"));
@@ -67,6 +68,7 @@ function iniciar() {
   onSnapshot(doc(db, "config", "backup"), s => { S.backup = s.exists() ? s.data() : {}; renderBackup(); }, falha);
   onSnapshot(doc(db, "config", "clube"), s => { S.clube = s.exists() ? s.data() : {}; renderVotacao(); }, falha);
   $("#lSenha").value = gerarSenha();
+  iniciarBauAdmin();
 }
 
 /* ---------------- leitoras ---------------- */
@@ -611,6 +613,8 @@ $("#btnBackup").addEventListener("click", async () => {
       registros: await lerColecao("registros"),
       cadernoLivros: await lerColecao("cadernoLivros"),
       reflexoes: {},
+      bau: await lerColecao("bau"),
+      bauComentarios: {},
       fotos: {},
       votos: {}
     };
@@ -624,6 +628,9 @@ $("#btnBackup").addEventListener("click", async () => {
     }
     for (const id of Object.keys(dados.cadernoLivros)) {
       const r = await lerColecao("cadernoLivros", id, "reflexoes"); if (Object.keys(r).length) dados.reflexoes[id] = r;
+    }
+    for (const id of Object.keys(dados.bau)) {
+      const c = await lerColecao("bau", id, "comentarios"); if (Object.keys(c).length) dados.bauComentarios[id] = c;
     }
     for (const id of Object.keys(dados.encontros)) {
       const p = await lerColecao("encontros", id, "presencas"); if (Object.keys(p).length) dados.presencas[id] = p;

@@ -2,9 +2,10 @@
 import {
   auth, db, entrar, trocarSenha, onAuthStateChanged, signOut, esc, usuarioDoEmail, isAdminEmail,
   dataExtenso, dataCurta, hojeISO, diasAte, parseData, MESES_CAP, capaHTML, ligarTema
-} from "./firebase.js?v=20261101a";
-import { enfeitarRosto, planta } from "./ornamentos.js?v=20261101a";
-import { cardCaderno, pintarCartoes, abrirCadernoPeloEndereco, fecharCaderno, contextoCaderno } from "./caderno.js?v=20261101a";
+} from "./firebase.js?v=20261101b";
+import { enfeitarRosto, planta } from "./ornamentos.js?v=20261101b";
+import { iniciarBau, pararBau, abrirTextoPeloEndereco } from "./bau.js?v=20261101b";
+import { cardCaderno, pintarCartoes, abrirCadernoPeloEndereco, fecharCaderno, contextoCaderno } from "./caderno.js?v=20261101b";
 import {
   doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc, collection, onSnapshot, query, orderBy, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -110,7 +111,7 @@ $("#formSenha").addEventListener("submit", async (e) => {
 });
 
 function pararTudo() {
-  fecharEspecial(true); fecharRegistroView(); fecharLightbox(); fecharCaderno();
+  fecharEspecial(true); fecharRegistroView(); fecharLightbox(); fecharCaderno(); pararBau();
   estado.subs.forEach(u => u()); estado.subs = [];
   [estado.subPresencas, estado.subVoto, estado.subNotas].forEach(u => u && u());
   estado.subPresencas = estado.subVoto = estado.subNotas = null;
@@ -139,6 +140,7 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
     contextoCaderno({ usuario: u, admin, nomeDe: (x) => nomeDe(x) });
+    iniciarBau({ usuario: u, admin, nomeDe: (x) => nomeDe(x) });
     $("#nomeTopo").textContent = m.nome;
     $("#nomeMenu").textContent = m.nome;
     $("#saudacao").textContent = `Que bom te ver por aqui, ${m.nome}.`;
@@ -517,7 +519,7 @@ function abrirPeloEndereco() {
   const e = m ? estado.especiais.find(x => x.id === decodeURIComponent(m[1])) : null;
   if (e) abrirEspecial(e); else fecharEspecial(true);
 }
-window.addEventListener("hashchange", () => { if (estado.usuario) { abrirPeloEndereco(); abrirRegistroPeloEndereco(); abrirCadernoPeloEndereco(estado.especiais); } });
+window.addEventListener("hashchange", () => { if (estado.usuario) { abrirPeloEndereco(); abrirRegistroPeloEndereco(); abrirCadernoPeloEndereco(estado.especiais); abrirTextoPeloEndereco(); } });
 
 function abrirEspecial(e) {
   const v = $("#espView");
@@ -676,4 +678,5 @@ document.addEventListener("keydown", (e) => {
   }
   if (e.key === "Escape" && !$("#regView").hidden) location.hash = "memorias";
   else if (e.key === "Escape" && !$("#cadView").hidden) location.hash = "especiais";
+  else if (e.key === "Escape" && !$("#bauView").hidden) location.hash = "bau";
 }, true);

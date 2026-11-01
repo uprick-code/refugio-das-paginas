@@ -54,3 +54,7 @@ Se uma administradora **esquecer** a senha, apague a conta dela em Authenticatio
 ## Versões e cache
 
 O GitHub Pages deixa os arquivos guardados no navegador por até 10 minutos. Para que uma atualização nunca misture arquivos novos com antigos, todos os `import` entre os arquivos de `js/` e os links em `index.html` e `admin.html` levam a mesma marca de versão (`?v=...`). **A cada publicação, troque a marca em todos os lugares de uma vez** (a mesma em todos os arquivos, senão o Firebase é carregado duas vezes). Se o código não carregar, a página mostra um aviso pedindo para recarregar.
+
+## Baú da Escrita
+
+Os textos da Taís: poemas, contos, crônicas, exercícios de oficina, ensaios, cartas e fragmentos, com a origem (autoral, curso, oficina ou encontro do clube). No painel, aba **Baú da Escrita**: título, tipo, data, de onde veio, uma linha de contexto ("Sobre este texto") e o texto, que pode ser guardado como rascunho ou publicado. Nos poemas, cada linha é um verso e uma linha em branco separa as estrofes; na prosa, cada linha é um parágrafo. As leitoras veem só os publicados (menu **Baú da Escrita**) e podem comentar. Dados na coleção `bau`, com a subcoleção `comentarios`. Apagar um texto apaga também os comentários.

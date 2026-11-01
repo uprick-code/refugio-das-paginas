@@ -81,6 +81,22 @@ service cloud.firestore {
       }
     }
 
+    // Baú da Escrita: textos da Taís. As leitoras só veem os publicados e podem comentar.
+    match /bau/{id} {
+      allow read: if isAdmin() || (isMember() && resource.data.publicado == true);
+      allow write: if isAdmin();
+
+      match /comentarios/{c} {
+        allow read: if isMember();
+        allow create: if isMe(request.resource.data.autor)
+          && request.resource.data.keys().hasOnly(['autor', 'texto', 'criadoEm'])
+          && request.resource.data.texto is string
+          && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 600
+          && request.resource.data.criadoEm == request.time;
+        allow delete: if isAdmin() || isMe(resource.data.autor);
+      }
+    }
+
     // Capas e fotos enviadas pelo painel (imagem reduzida, guardada como texto).
     match /capas/{id} {
       allow read: if isMember();
