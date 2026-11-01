@@ -29,7 +29,7 @@ As leitoras entram com **usuário + senha**. Por baixo, o Firebase usa um e-mail
 
 ## Especiais
 
-Páginas sobre uma autora, um autor ou um tema, criadas pela Taís no painel (aba **Especiais**): foto, frase de abertura, "quem é", linha do tempo (uma linha por acontecimento, `ano — texto`), livros do acervo, curiosidades e links (`nome | https://…`). Ficam como rascunho até serem marcadas como publicadas. Dados na coleção `especiais`; a foto vai para `capas/esp_<id>`.
+Páginas sobre uma autora, um autor ou um tema, criadas pela Taís no painel (aba **Especiais**): foto, frase de abertura, "quem é", linha do tempo (uma linha por acontecimento, `ano — texto`), livros do acervo, curiosidades e links (`nome | https://…`). Ficam como rascunho até serem marcadas como publicadas. **Os especiais publicados ficam abertos a qualquer pessoa, sem login**: aparecem na página de entrada (seção "Para conhecer de perto") e os links `#esp-…`, `#cad-…` e `#cadl-…` abrem direto. Escrever e ler as reflexões das leitoras continua só para quem entrou. Para isso, as regras liberam a leitura de `especiais` publicados, `livros`, `capas` e dos `cadernoLivros` com `pub: true`; o painel marca `pub` sozinho nos livros de cada caderno, igual ao "Publicado" do caderno. Dados na coleção `especiais`; a foto vai para `capas/esp_<id>`.
 
 ### Cadernos de leitura
 

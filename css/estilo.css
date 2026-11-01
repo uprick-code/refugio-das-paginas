@@ -520,3 +520,9 @@ label.btn[aria-disabled="true"]{opacity:.5;pointer-events:none}
 .bau-comentarios h2{font-size:30px;font-weight:500}
 .bau-comentarios .caixa{gap:10px}
 #bauAdmin input:not([type=checkbox]),#bauAdmin select{min-width:0;max-width:100%;width:100%}
+
+/* ===================== especiais abertos (página de entrada) ===================== */
+.conhecer{padding:10px 0 60px}
+.conhecer .washi{margin:0 auto 34px}
+.convite-clube{margin-top:26px;max-width:560px;justify-items:start;border-left:4px solid var(--rose-ink)}
+.convite-clube h3{font-size:26px}

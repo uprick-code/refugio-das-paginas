@@ -42,8 +42,9 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // O acervo é aberto (aparece nos Especiais públicos); o mural de cada livro, não.
     match /livros/{id} {
-      allow read: if isMember();
+      allow read: if true;
       allow write: if isAdmin();
 
       match /notas/{nota} {
@@ -59,15 +60,16 @@ service cloud.firestore {
       }
     }
 
-    // Especiais de autoras/temas. As leitoras só veem os publicados.
+    // Especiais de autoras/temas: os publicados ficam abertos a qualquer pessoa, mesmo sem login.
     match /especiais/{id} {
-      allow read: if isAdmin() || (isMember() && resource.data.publicado == true);
+      allow read: if isAdmin() || resource.data.publicado == true;
       allow write: if isAdmin();
     }
 
     // Cadernos de leitura: os livros de cada caderno e as reflexões das leitoras.
+    // Livros dos cadernos: abertos ao público só quando o caderno está publicado ("pub", marcado pelo painel).
     match /cadernoLivros/{id} {
-      allow read: if isMember();
+      allow read: if isMember() || resource.data.pub == true;
       allow write: if isAdmin();
 
       match /reflexoes/{r} {
@@ -98,8 +100,9 @@ service cloud.firestore {
     }
 
     // Capas e fotos enviadas pelo painel (imagem reduzida, guardada como texto).
+    // Capas dos livros, fotos dos especiais e ilustrações dos cadernos: abertas, porque aparecem nos Especiais públicos.
     match /capas/{id} {
-      allow read: if isMember();
+      allow read: if true;
       allow create, update: if isAdmin()
         && request.resource.data.keys().hasOnly(['img'])
         && request.resource.data.img is string

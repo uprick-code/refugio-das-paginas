@@ -1,5 +1,5 @@
 // Baú da Escrita: os textos da Taís (poemas, contos, crônicas, exercícios de oficina) e os comentários das leitoras.
-import { db, esc, MESES_CAP } from "./firebase.js?v=20261101b";
+import { db, esc, MESES_CAP } from "./firebase.js?v=20261101c";
 import {
   doc, addDoc, deleteDoc, collection, query, where, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";

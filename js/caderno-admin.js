@@ -1,7 +1,7 @@
 // Painel: livros de um caderno de leitura (lista, títulos em lote, ficha com capa e ilustração)
 // e a importação dos dois cadernos da Taís.
-import { db, esc, capaHTML, prepararCapa, prepararIlustracao, guardarCapaNoCache } from "./firebase.js?v=20261101b";
-import { desenharCapa, temaDe } from "./caderno.js?v=20261101b";
+import { db, esc, capaHTML, prepararCapa, prepararIlustracao, guardarCapaNoCache } from "./firebase.js?v=20261101c";
+import { desenharCapa, temaDe } from "./caderno.js?v=20261101c";
 import {
   doc, getDocs, setDoc, deleteDoc, collection, query, where, onSnapshot, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -9,6 +9,24 @@ import {
 const $ = (s) => document.querySelector(s);
 const A = { cad: null, livros: [], sub: null, edit: null, capaNova: null, tirarCapa: false, ilusNova: null, tirarIlus: false };
 const STATUS = { fila: "na fila", lendo: "lendo", lido: "lido" };
+
+/* ---------- livros públicos ---------- */
+// Visitantes sem login só leem livros de cadernos publicados: cada livro leva "pub", igual ao "Publicado" do caderno.
+let filaSinc = Promise.resolve();
+export function sincronizarPubCadernos(especiais) {
+  const cadernos = especiais.filter(x => x.formato === "caderno").map(x => ({ id: x.id, pub: !!x.publicado }));
+  filaSinc = filaSinc.then(async () => {
+    for (const c of cadernos) {
+      try {
+        const s = await getDocs(query(collection(db, "cadernoLivros"), where("caderno", "==", c.id)));
+        const errados = s.docs.filter(d => (d.data().pub === true) !== c.pub);
+        if (!errados.length) continue;
+        const b = writeBatch(db); errados.forEach(d => b.update(doc(db, "cadernoLivros", d.id), { pub: c.pub })); await b.commit();
+      } catch (err) { console.error(err); }
+    }
+  });
+  return filaSinc;
+}
 
 /* ---------- lista de livros ---------- */
 export function abrirLivrosCaderno(cad) {
@@ -67,7 +85,7 @@ async function adicionarLote() {
   const base = Math.max(-1, ...A.livros.map(l => l.ordem ?? 0)) + 1;
   try {
     const b = writeBatch(db);
-    titulos.forEach((t, i) => b.set(doc(collection(db, "cadernoLivros")), { caderno: A.cad.id, ordem: base + i, titulo: t.slice(0, 120), status: "fila", nota: 0 }));
+    titulos.forEach((t, i) => b.set(doc(collection(db, "cadernoLivros")), { caderno: A.cad.id, ordem: base + i, titulo: t.slice(0, 120), status: "fila", nota: 0, pub: !!A.cad.publicado }));
     await b.commit();
     $("#cadLote").value = ""; $("#cadLoteMsg").textContent = `${titulos.length} título${titulos.length === 1 ? "" : "s"} adicionado${titulos.length === 1 ? "" : "s"}.`;
   } catch (err) { console.error(err); $("#cadLoteMsg").textContent = "Não foi possível adicionar. Confira se as regras novas já foram publicadas no Firebase."; }

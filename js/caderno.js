@@ -1,6 +1,6 @@
 // Caderno de leitura: um formato dos Especiais inspirado nos cadernos da Taís.
 // Abertura, coleção de livros, ficha de cada livro, reflexões das leitoras e imagem para redes sociais.
-import { db, esc, capaHTML } from "./firebase.js?v=20261101b";
+import { db, esc, capaHTML } from "./firebase.js?v=20261101c";
 import {
   doc, getDoc, getDocs, addDoc, deleteDoc, collection, query, where, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -172,7 +172,9 @@ async function abrirCaderno(e) {
   const tema = temaDe(e);
   v.className = `esp-view cad-view tema-${tema}`;
   try {
-    const s = await getDocs(query(collection(db, "cadernoLivros"), where("caderno", "==", e.id)));
+    // Visitantes (sem login) só leem os livros marcados como públicos, que o painel sincroniza com o "Publicado".
+    const s = await getDocs(C.usuario ? query(collection(db, "cadernoLivros"), where("caderno", "==", e.id))
+      : query(collection(db, "cadernoLivros"), where("caderno", "==", e.id), where("pub", "==", true)));
     C.livros = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
   } catch (err) { console.error(err); C.livros = []; }
   const lidos = C.livros.filter(l => l.status === "lido").length, lendo = C.livros.filter(l => l.status === "lendo").length;
@@ -208,7 +210,7 @@ async function abrirCaderno(e) {
   v.hidden = false; document.body.style.overflow = "hidden";
   if (novo) v.scrollTop = 0;
   pintarCapas(v);
-  $("#cadFechar").addEventListener("click", () => { location.hash = "especiais"; });
+  $("#cadFechar").addEventListener("click", () => { location.hash = C.usuario ? "especiais" : "conhecer"; });
   $("#cadLinkCad").addEventListener("click", (ev) => copiarLink(ev.currentTarget, "#cad-" + e.id, "Copiar link do caderno"));
   $("#cadVerColecao").addEventListener("click", (ev) => { ev.preventDefault(); $("#cadColecao").scrollIntoView({ behavior: "smooth" }); });
   v.querySelector(".cad-grade").addEventListener("click", (ev) => {
@@ -306,7 +308,10 @@ function abrirFicha(id, rolar) {
         <button class="btn mini" type="button" id="cadLinkLivro">Copiar link deste livro</button></span>
       <button class="btn mini" type="button" id="cadProx" ${i === C.livros.length - 1 ? "disabled" : ""}>Próximo livro ›</button>
     </div>
-    <div class="reflexoes">
+    ${C.usuario ? "" : `<div class="caixa convite-clube"><span class="label">Reflexões das leitoras</span>
+      <p>As leitoras do clube deixam aqui o que cada livro despertou nelas. Para ler e escrever reflexões, entre com seu usuário.</p>
+      <button class="btn solid" type="button" data-entrar>Entrar no clube</button></div>`}
+    <div class="reflexoes" ${C.usuario ? "" : "hidden"}>
       <form class="caixa" id="cadFormRef" autocomplete="off">
         <h3>Deixe sua reflexão</h3>
         <p class="small">Uma ideia que ficou, uma frase sublinhada, uma pergunta. As outras leitoras veem no caderno.</p>
@@ -324,9 +329,9 @@ function abrirFicha(id, rolar) {
   $("#cadLinkLivro").addEventListener("click", (ev) => copiarLink(ev.currentTarget, "#cadl-" + l.id, "Copiar link deste livro"));
   $("#cadFormRef").addEventListener("submit", enviarReflexao);
   $("#cadListaRef").addEventListener("click", cliqueReflexao);
-  C.subRef && C.subRef();
+  C.subRef && C.subRef(); C.subRef = null;
   C.reflexoes = []; renderReflexoes();
-  C.subRef = onSnapshot(collection(db, "cadernoLivros", l.id, "reflexoes"), s => {
+  if (C.usuario) C.subRef = onSnapshot(collection(db, "cadernoLivros", l.id, "reflexoes"), s => {
     C.reflexoes = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.criadoEm?.seconds || 0) - (a.criadoEm?.seconds || 0));
     renderReflexoes();
   }, err => console.error(err));
